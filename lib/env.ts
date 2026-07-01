@@ -13,13 +13,12 @@ export const env = {
     return required("EXPRESS_API_URL");
   },
   get PUBLIC_ORIGIN() {
-    if (process.env.NEXT_PUBLIC_APP_ORIGIN) {
-      return process.env.NEXT_PUBLIC_APP_ORIGIN;
-    }
-    if (process.env.RAILWAY_PUBLIC_DOMAIN) {
-      return `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`;
-    }
-    return "http://localhost:3000";
+    const raw =
+      process.env.NEXT_PUBLIC_APP_ORIGIN ||
+      (process.env.RAILWAY_PUBLIC_DOMAIN
+        ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
+        : "http://localhost:3000");
+    return raw.replace(/\/$/, "");
   },
 };
 
