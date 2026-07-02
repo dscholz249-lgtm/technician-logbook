@@ -24,6 +24,9 @@ export async function sendMagicLink(
     email: normalized,
     options: { emailRedirectTo: redirectTo },
   });
-  if (error) return { error: error.message };
+  if (error) {
+    const msg = error.message && error.message !== "{}" ? error.message : "Failed to send magic link. Check your email configuration.";
+    return { error: msg };
+  }
   return {};
 }
