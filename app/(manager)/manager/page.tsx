@@ -3,14 +3,18 @@ import { getManagerByEmail, getCompanies } from "@/lib/supabase/db";
 import { getQueue, getLogbook } from "@/lib/api";
 import { LogbookTable } from "@/app/(dashboard)/dashboard/logbook-table";
 import { PhoneForm } from "./phone-form";
+import { ReminderForm } from "./reminder-form";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import {
   Table, TableHeader, TableBody, TableHead, TableRow, TableCell,
 } from "@/components/ui/table";
-import type { QueueItem } from "@/lib/types";
+import type { QueueItem, } from "@/lib/types";
+import type { Technician } from "@/lib/supabase/db";
 
 export const dynamic = "force-dynamic";
+
+const SKILLCAT_SMS_NUMBER = "(251) 313-5407";
 
 function formatTime(ms: number) {
   return new Intl.DateTimeFormat("en-US", {
@@ -110,6 +114,39 @@ function ReadOnlyQueueTable({ items, showActioned }: { items: QueueItem[]; showA
   );
 }
 
+function TechnicianTable({ technicians }: { technicians: Technician[] }) {
+  if (technicians.length === 0) {
+    return (
+      <div className="rounded-xl border border-border bg-card py-12 text-center text-sm text-muted-foreground">
+        No technicians on file. Contact your SkillCat administrator.
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-xl border border-border overflow-hidden">
+      <Table>
+        <TableHeader>
+          <TableRow className="hover:bg-transparent">
+            <TableHead>Name</TableHead>
+            <TableHead>Title</TableHead>
+            <TableHead>Email</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {technicians.map((t) => (
+            <TableRow key={t.id}>
+              <TableCell className="font-medium text-sm">{t.name}</TableCell>
+              <TableCell className="text-sm text-muted-foreground">{t.title ?? "—"}</TableCell>
+              <TableCell className="text-xs text-muted-foreground">{t.email ?? "—"}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
+}
+
 export default async function ManagerPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -125,20 +162,43 @@ export default async function ManagerPage() {
     getLogbook(manager.company_id).catch(() => []),
   ]);
 
+  const technicians = company?.technicians ?? [];
+
   return (
     <div className="space-y-6">
-      <div className="flex items-start justify-between flex-wrap gap-4">
-        <div>
-          <h1 className="text-xl font-semibold">{company?.name ?? "Your Company"}</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            {manager.name} · Read-only view of your team's activity.
-          </p>
+      {/* Header */}
+      <div>
+        <h1 className="text-xl font-semibold">{company?.name ?? "Your Company"}</h1>
+        <p className="text-sm text-muted-foreground mt-0.5">
+          {manager.name} · Read-only view of your team's activity.
+        </p>
+      </div>
+
+      {/* SMS info callout */}
+      <div className="rounded-xl border border-border bg-card px-4 py-3.5 flex items-start gap-3">
+        <div className="mt-0.5 size-7 rounded-md bg-skillcat-orange/15 flex items-center justify-center shrink-0 text-skillcat-orange text-base">
+          💬
         </div>
-        <div className="rounded-xl border border-border bg-card px-4 py-3">
-          <PhoneForm currentPhone={manager.phone} />
+        <div>
+          <p className="text-sm font-medium">Send updates by text</p>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Text <span className="font-mono font-medium text-foreground">{SKILLCAT_SMS_NUMBER}</span> to
+            add a note about a technician or assign them to a new training.
+          </p>
         </div>
       </div>
 
+      {/* Settings row */}
+      <div className="flex flex-wrap gap-4">
+        <div className="rounded-xl border border-border bg-card px-4 py-3">
+          <PhoneForm currentPhone={manager.phone} />
+        </div>
+        <div className="rounded-xl border border-border bg-card px-4 py-3">
+          <ReminderForm current={manager.reminder_preference ?? "never"} />
+        </div>
+      </div>
+
+      {/* Stat cards */}
       <div className="grid grid-cols-3 gap-4">
         <div className="rounded-xl border border-border bg-card px-4 py-3">
           <p className="text-xs text-muted-foreground">Pending actions</p>
@@ -148,7 +208,7 @@ export default async function ManagerPage() {
         </div>
         <div className="rounded-xl border border-border bg-card px-4 py-3">
           <p className="text-xs text-muted-foreground">Technicians</p>
-          <p className="text-2xl font-semibold mt-0.5">{company?.technicians.length ?? 0}</p>
+          <p className="text-2xl font-semibold mt-0.5">{technicians.length}</p>
         </div>
         <div className="rounded-xl border border-border bg-card px-4 py-3">
           <p className="text-xs text-muted-foreground">Logbook entries</p>
@@ -156,6 +216,7 @@ export default async function ManagerPage() {
         </div>
       </div>
 
+      {/* Tabs */}
       <Tabs defaultValue="queue">
         <TabsList>
           <TabsTrigger value="queue">
@@ -168,6 +229,12 @@ export default async function ManagerPage() {
           </TabsTrigger>
           <TabsTrigger value="actioned">Actioned</TabsTrigger>
           <TabsTrigger value="logbook">Logbook</TabsTrigger>
+          <TabsTrigger value="team">
+            Your Team
+            {technicians.length > 0 && (
+              <span className="ml-1.5 text-xs text-muted-foreground">({technicians.length})</span>
+            )}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="queue" className="mt-4">
@@ -180,6 +247,10 @@ export default async function ManagerPage() {
 
         <TabsContent value="logbook" className="mt-4">
           <LogbookTable entries={logbook} />
+        </TabsContent>
+
+        <TabsContent value="team" className="mt-4">
+          <TechnicianTable technicians={technicians} />
         </TabsContent>
       </Tabs>
     </div>

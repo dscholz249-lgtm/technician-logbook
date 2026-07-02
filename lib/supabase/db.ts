@@ -8,12 +8,15 @@ export interface Company {
   updated_at: string;
 }
 
+export type ReminderPreference = "never" | "daily" | "weekly";
+
 export interface Manager {
   id: string;
   company_id: string;
   name: string;
   email: string;
   phone: string | null;
+  reminder_preference: ReminderPreference;
   created_at: string;
   updated_at: string;
 }
@@ -123,6 +126,18 @@ export async function updateManagerPhone(
   const { error } = await db
     .from("managers")
     .update({ phone, updated_at: new Date().toISOString() })
+    .eq("id", managerId);
+  if (error) throw error;
+}
+
+export async function updateManagerReminderPreference(
+  managerId: string,
+  preference: ReminderPreference,
+): Promise<void> {
+  const db = createAdminClient();
+  const { error } = await db
+    .from("managers")
+    .update({ reminder_preference: preference, updated_at: new Date().toISOString() })
     .eq("id", managerId);
   if (error) throw error;
 }
