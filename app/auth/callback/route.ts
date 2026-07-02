@@ -1,8 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { getManagerByEmail } from "@/lib/supabase/db";
 import { env } from "@/lib/env";
-
-const DEFAULT_NEXT = "/dashboard";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
@@ -10,13 +9,7 @@ export async function GET(request: NextRequest) {
   const code = searchParams.get("code");
   const tokenHash = searchParams.get("token_hash");
   const type = searchParams.get("type");
-  const rawNext = searchParams.get("next");
-  const next =
-    rawNext && rawNext.startsWith("/") && !rawNext.startsWith("//")
-      ? rawNext
-      : DEFAULT_NEXT;
-  const errorParam =
-    searchParams.get("error_description") || searchParams.get("error");
+  const errorParam = searchParams.get("error_description") || searchParams.get("error");
 
   if (errorParam) {
     return NextResponse.redirect(
@@ -33,10 +26,7 @@ export async function GET(request: NextRequest) {
         `${origin}/auth/sign-in?error=${encodeURIComponent(error.message)}`,
       );
     }
-    return NextResponse.redirect(`${origin}${next}`);
-  }
-
-  if (tokenHash && type) {
+  } else if (tokenHash && type) {
     const { error } = await supabase.auth.verifyOtp({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       type: type as any,
@@ -47,8 +37,27 @@ export async function GET(request: NextRequest) {
         `${origin}/auth/sign-in?error=${encodeURIComponent(error.message)}`,
       );
     }
-    return NextResponse.redirect(`${origin}${next}`);
+  } else {
+    return NextResponse.redirect(`${origin}/auth/sign-in?error=missing_token`);
   }
 
-  return NextResponse.redirect(`${origin}/auth/sign-in?error=missing_token`);
+  // Determine role and route accordingly
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user?.email) {
+    return NextResponse.redirect(`${origin}/auth/sign-in?error=no_user`);
+  }
+
+  const isAdmin = env.ADMIN_EMAILS.includes(user.email.toLowerCase());
+  if (isAdmin) {
+    return NextResponse.redirect(`${origin}/dashboard`);
+  }
+
+  const manager = await getManagerByEmail(user.email).catch(() => null);
+  if (manager) {
+    return NextResponse.redirect(`${origin}/manager`);
+  }
+
+  // Signed in but not admin or manager — sign them out and show error
+  await supabase.auth.signOut();
+  return NextResponse.redirect(`${origin}/auth/sign-in?error=not_authorized`);
 }

@@ -1,16 +1,19 @@
 import { Suspense } from "react";
 import { getQueue, getLogbook } from "@/lib/api";
+import { getCompanies } from "@/lib/supabase/db";
 import { QueueTable } from "./queue-table";
 import { LogbookTable } from "./logbook-table";
+import { TestUsersTab } from "./test-users-tab";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
-  const [pending, actioned, logbook] = await Promise.all([
+  const [pending, actioned, logbook, companies] = await Promise.all([
     getQueue("pending").catch(() => []),
     getQueue("actioned").catch(() => []),
     getLogbook().catch(() => []),
+    getCompanies().catch(() => []),
   ]);
 
   return (
@@ -40,6 +43,12 @@ export default async function DashboardPage() {
           </TabsTrigger>
           <TabsTrigger value="actioned">Actioned</TabsTrigger>
           <TabsTrigger value="logbook">Logbook</TabsTrigger>
+          <TabsTrigger value="test-users">
+            Test Users
+            {companies.length > 0 && (
+              <span className="ml-1.5 text-xs text-muted-foreground">({companies.length})</span>
+            )}
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="queue" className="mt-4">
@@ -59,28 +68,20 @@ export default async function DashboardPage() {
             <LogbookTable entries={logbook} />
           </Suspense>
         </TabsContent>
+
+        <TabsContent value="test-users" className="mt-4">
+          <TestUsersTab companies={companies} />
+        </TabsContent>
       </Tabs>
     </div>
   );
 }
 
-function StatCard({
-  label,
-  value,
-  highlight,
-}: {
-  label: string;
-  value: number;
-  highlight?: boolean;
-}) {
+function StatCard({ label, value, highlight }: { label: string; value: number; highlight?: boolean }) {
   return (
     <div className="rounded-xl border border-border bg-card px-4 py-3">
       <p className="text-xs text-muted-foreground">{label}</p>
-      <p
-        className={`text-2xl font-semibold mt-0.5 ${
-          highlight && value > 0 ? "text-skillcat-orange" : ""
-        }`}
-      >
+      <p className={`text-2xl font-semibold mt-0.5 ${highlight && value > 0 ? "text-skillcat-orange" : ""}`}>
         {value}
       </p>
     </div>
@@ -101,9 +102,5 @@ function isToday(item: { actioned_at: number | null }): boolean {
   if (!item.actioned_at) return false;
   const d = new Date(item.actioned_at);
   const now = new Date();
-  return (
-    d.getFullYear() === now.getFullYear() &&
-    d.getMonth() === now.getMonth() &&
-    d.getDate() === now.getDate()
-  );
+  return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
 }

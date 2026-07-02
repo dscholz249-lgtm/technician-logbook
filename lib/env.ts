@@ -12,6 +12,11 @@ export const env = {
   get EXPRESS_API_URL() {
     return required("EXPRESS_API_URL");
   },
+  // Comma-separated list of emails allowed to access the admin dashboard.
+  get ADMIN_EMAILS(): string[] {
+    const raw = process.env.ADMIN_EMAILS || "";
+    return raw.split(",").map(e => e.trim().toLowerCase()).filter(Boolean);
+  },
   get PUBLIC_ORIGIN() {
     const raw =
       process.env.NEXT_PUBLIC_APP_ORIGIN ||
