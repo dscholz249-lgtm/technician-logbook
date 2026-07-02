@@ -53,6 +53,8 @@ export async function saveCompany(formData: FormData): Promise<{ error?: string 
     await syncCompanyToExpress(company.id, [manager], techRows);
 
     revalidatePath("/dashboard");
+    revalidatePath("/dashboard/companies");
+    revalidatePath("/dashboard/managers");
     return {};
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Unknown error";

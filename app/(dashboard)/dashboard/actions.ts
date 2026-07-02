@@ -6,7 +6,7 @@ import { markActioned } from "@/lib/api";
 
 export async function actionQueueItem(
   id: number,
-  note: string,
+  note?: string,
 ): Promise<{ error?: string }> {
   const supabase = await createClient();
   const {
