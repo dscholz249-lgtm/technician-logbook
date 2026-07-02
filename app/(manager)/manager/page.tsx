@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getManagerByEmail, getCompanies } from "@/lib/supabase/db";
 import { getQueue, getLogbook } from "@/lib/api";
@@ -82,7 +83,11 @@ function TechnicianTable({ technicians }: { technicians: Technician[] }) {
             <TableBody>
               {technicians.map(t => (
                 <TableRow key={t.id}>
-                  <TableCell className="font-medium text-sm">{t.name}</TableCell>
+                  <TableCell className="font-medium text-sm">
+                    <Link href={`/manager/technician/${t.id}`} className="hover:underline">
+                      {t.name}
+                    </Link>
+                  </TableCell>
                   <TableCell className="text-sm text-muted-foreground">{t.title ?? "—"}</TableCell>
                   <TableCell className="text-xs text-muted-foreground">{t.email ?? "—"}</TableCell>
                 </TableRow>
@@ -115,27 +120,7 @@ export default async function ManagerPage() {
   const totalLogs = queue.length + logbook.length;
 
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* Header */}
-      <header className="border-b border-border bg-card px-6 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="size-7 rounded-md bg-gradient-to-b from-skillcat-orange-bright to-skillcat-orange shrink-0" />
-          <div>
-            <p className="text-xs text-muted-foreground leading-none">SkillCat</p>
-            <p className="text-sm font-semibold leading-tight">Technician Logbook</p>
-          </div>
-        </div>
-        <div className="flex items-center gap-3">
-          <span className="text-xs text-muted-foreground hidden sm:block">{user!.email}</span>
-          <form action="/auth/sign-out" method="POST">
-            <button type="submit" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-              Sign out
-            </button>
-          </form>
-        </div>
-      </header>
-
-      <div className="flex-1 px-6 py-6 max-w-5xl mx-auto w-full space-y-6">
+    <div className="space-y-6">
         {/* Company + manager info */}
         <div>
           <h1 className="text-xl font-semibold">{company?.name ?? "Your Company"}</h1>
@@ -179,7 +164,6 @@ export default async function ManagerPage() {
 
         {/* All technicians */}
         <TechnicianTable technicians={technicians} />
-      </div>
     </div>
   );
 }

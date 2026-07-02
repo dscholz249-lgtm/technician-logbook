@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { InboxIcon, BookOpenIcon, BuildingIcon, UsersIcon, SettingsIcon, HelpCircleIcon } from "lucide-react";
+import { InboxIcon, BookOpenIcon, BuildingIcon, UsersIcon, HelpCircleIcon } from "lucide-react";
 
 const NAV = [
   {
@@ -22,7 +22,6 @@ const NAV = [
   {
     label: "ACCOUNT",
     items: [
-      { href: "/dashboard/settings", label: "Settings", icon: SettingsIcon },
       { href: "/dashboard/support", label: "Support", icon: HelpCircleIcon },
     ],
   },
