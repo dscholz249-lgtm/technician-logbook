@@ -8,6 +8,9 @@ export const env = {
   get SUPABASE_SERVICE_ROLE_KEY() {
     return process.env.SUPABASE_SERVICE_ROLE_KEY;
   },
+  get RESEND_API_KEY() {
+    return process.env.RESEND_API_KEY;
+  },
   // URL of the Express SMS server. Server-only — never expose to the client.
   get EXPRESS_API_URL() {
     return required("EXPRESS_API_URL");

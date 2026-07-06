@@ -1,6 +1,7 @@
 import { getCompanies } from "@/lib/supabase/db";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "@/components/ui/table";
+import { InviteButton } from "./invite-button";
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +34,7 @@ export default async function ManagersPage() {
                 <TableHead>Email</TableHead>
                 <TableHead>Phone</TableHead>
                 <TableHead>Reminders</TableHead>
+                <TableHead></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -55,6 +57,9 @@ export default async function ManagersPage() {
                         : m.reminder_preference === "weekly" ? "Fridays at 5pm"
                         : "Off"}
                     </span>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <InviteButton managerId={m.id} />
                   </TableCell>
                 </TableRow>
               ))}
