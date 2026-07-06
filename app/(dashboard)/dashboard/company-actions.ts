@@ -74,6 +74,17 @@ async function fetchTechsForSync(
   return { data: company?.technicians ?? [] };
 }
 
+export async function syncAllCompanies(): Promise<{ error?: string; synced?: number }> {
+  try {
+    const companies = await getCompanies();
+    await Promise.all(companies.map(c => syncCompanyToExpress(c.id, c.managers, c.technicians)));
+    revalidatePath("/dashboard");
+    return { synced: companies.length };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Unknown error" };
+  }
+}
+
 export async function removeCompany(companyId: string): Promise<{ error?: string }> {
   try {
     await deleteCompany(companyId);

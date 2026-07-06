@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import type { CompanyWithRelations } from "@/lib/supabase/db";
-import { saveCompany, removeCompany } from "./company-actions";
+import { saveCompany, removeCompany, syncAllCompanies } from "./company-actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -96,6 +96,22 @@ function CompanyForm({
   );
 }
 
+function SyncButton() {
+  const [pending, startTransition] = useTransition();
+  function handleClick() {
+    startTransition(async () => {
+      const result = await syncAllCompanies();
+      if (result.error) toast.error(`Sync failed: ${result.error}`);
+      else toast.success(`Synced ${result.synced} company roster(s) to SMS bot.`);
+    });
+  }
+  return (
+    <Button variant="outline" size="sm" onClick={handleClick} disabled={pending}>
+      {pending ? "Syncing…" : "Sync roster"}
+    </Button>
+  );
+}
+
 function DeleteButton({ companyId, name }: { companyId: string; name: string }) {
   const [pending, startTransition] = useTransition();
 
@@ -124,9 +140,12 @@ export function TestUsersTab({ companies }: { companies: CompanyWithRelations[] 
         <p className="text-sm text-muted-foreground">
           Pilot companies and their managers. Managers can sign in with their listed email.
         </p>
-        <Button size="sm" onClick={() => setEditing("new")}>
-          <PlusIcon /> Add company
-        </Button>
+        <div className="flex items-center gap-2">
+          <SyncButton />
+          <Button size="sm" onClick={() => setEditing("new")}>
+            <PlusIcon /> Add company
+          </Button>
+        </div>
       </div>
 
       {companies.length === 0 ? (
