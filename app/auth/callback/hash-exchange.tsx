@@ -5,20 +5,49 @@ import { createBrowserClient } from "@supabase/ssr";
 
 export function HashExchange() {
   useEffect(() => {
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    );
+    async function exchange() {
+      const supabase = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      );
 
-    // createBrowserClient auto-parses hash fragments on init; getSession() triggers it.
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        // Session is now stored in cookies — hard-navigate so the server can read it.
+      // Try auto-detected session first (covers cases where SSR client did parse it)
+      const { data: { session: existing } } = await supabase.auth.getSession();
+      if (existing) {
         window.location.replace("/auth/callback?confirmed=1");
-      } else {
-        window.location.replace("/auth/sign-in?error=missing_token");
+        return;
       }
-    });
+
+      // Explicit hash parsing — @supabase/ssr browser client does not auto-parse hashes.
+      const hash = window.location.hash.slice(1);
+      if (hash) {
+        const params = new URLSearchParams(hash);
+
+        // Supabase may send an error in the hash (e.g. token already used)
+        const errorDesc = params.get("error_description") || params.get("error");
+        if (errorDesc) {
+          window.location.replace(`/auth/sign-in?error=${encodeURIComponent(errorDesc)}`);
+          return;
+        }
+
+        const access_token = params.get("access_token");
+        const refresh_token = params.get("refresh_token");
+
+        if (access_token && refresh_token) {
+          const { error } = await supabase.auth.setSession({ access_token, refresh_token });
+          if (!error) {
+            window.location.replace("/auth/callback?confirmed=1");
+            return;
+          }
+          window.location.replace(`/auth/sign-in?error=${encodeURIComponent(error.message)}`);
+          return;
+        }
+      }
+
+      window.location.replace("/auth/sign-in?error=missing_token");
+    }
+
+    exchange();
   }, []);
 
   return (
