@@ -42,7 +42,7 @@ export async function sendManagerInvite(
 
   const resend = new Resend(resendKey);
   const { error: sendError } = await resend.emails.send({
-    from: "SkillCat Labs <logbook@skillcatapp.com>",
+    from: "SkillCat Labs <logbook@tryskillcat.com>",
     to: manager.email,
     subject: `Welcome to SkillCat Labs, ${firstName}`,
     html,
