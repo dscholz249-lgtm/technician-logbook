@@ -3,6 +3,7 @@ interface InviteEmailProps {
   companyName: string;
   loginLink: string;
   preferencesLink: string;
+  origin: string;
 }
 
 export function buildInviteEmail({
@@ -10,6 +11,7 @@ export function buildInviteEmail({
   companyName,
   loginLink,
   preferencesLink,
+  origin,
 }: InviteEmailProps): string {
   return `<!DOCTYPE html>
 <html lang="en">
@@ -31,16 +33,7 @@ export function buildInviteEmail({
           <!-- Header -->
           <tr>
             <td style="padding:32px 40px 8px;">
-              <table role="presentation" cellpadding="0" cellspacing="0">
-                <tr>
-                  <td style="width:32px; vertical-align:middle;">
-                    <div style="width:30px; height:30px; border-radius:7px; background:linear-gradient(160deg,#F05523,#8A3114); text-align:center; line-height:30px; font-size:14px; color:#ffffff; font-weight:700;">SC</div>
-                  </td>
-                  <td style="padding-left:10px; vertical-align:middle; color:#ffffff; font-size:15px; font-weight:700;">
-                    SkillCat
-                  </td>
-                </tr>
-              </table>
+              <img src="${origin}/images/skillcat-labs-logo.png" alt="SkillCat Labs" width="120" style="display:block; max-width:120px;" />
             </td>
           </tr>
 
@@ -103,8 +96,8 @@ export function buildInviteEmail({
                 <tr>
                   <td style="padding:18px 20px; width:40px; vertical-align:top; font-size:14px; color:#F05523; font-weight:700;">01</td>
                   <td style="padding:18px 20px 18px 0; vertical-align:top;">
-                    <div style="color:#ffffff; font-size:14px; font-weight:600; margin-bottom:4px;">Assign courses</div>
-                    <div style="color:#A8A8A8; font-size:13px; line-height:1.55;">Just let us know who you want to assign and which course you want to assign them to &mdash; we&apos;ll take care of the rest.</div>
+                    <div style="color:#ffffff; font-size:14px; font-weight:600; margin-bottom:4px;">Lookup and Assign courses</div>
+                    <div style="color:#A8A8A8; font-size:13px; line-height:1.55;">Just let us know who you want to assign and which course you want to assign them to. Don&apos;t know which course? Just ask. We&apos;ll take care of the rest.</div>
                   </td>
                 </tr>
               </table>
@@ -141,6 +134,13 @@ export function buildInviteEmail({
             </td>
           </tr>
 
+          <!-- SMS screenshot -->
+          <tr>
+            <td style="padding:0 40px 28px;">
+              <img src="${origin}/images/sms-example.png" alt="Example SMS conversation" width="520" style="display:block; max-width:100%; border-radius:10px;" />
+            </td>
+          </tr>
+
           <tr>
             <td style="padding:0 40px 8px;">
               <p style="margin:0; color:#ffffff; font-size:14.5px; line-height:1.65; font-weight:600;">
@@ -152,7 +152,7 @@ export function buildInviteEmail({
           <tr>
             <td style="padding:0 40px 28px;">
               <p style="margin:0; color:#A8A8A8; font-size:14.5px; line-height:1.65;">
-                Thanks for taking part in this experiment &mdash; we&apos;re excited to have your input!
+                Your dashboard gives you a full view of every request your team has made, and lets you action them in one place.
               </p>
             </td>
           </tr>

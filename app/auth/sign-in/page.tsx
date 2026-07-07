@@ -12,9 +12,8 @@ export default async function SignInPage({
     <main className="min-h-screen flex items-center justify-center bg-zinc-950 text-zinc-100 px-6">
       <div className="w-full max-w-sm">
         <div className="mb-8">
-          <div className="flex items-center gap-2 mb-6">
-            <div className="size-8 rounded-lg bg-gradient-to-b from-skillcat-orange-bright to-skillcat-orange" />
-            <span className="font-semibold text-sm text-zinc-300">SkillCat</span>
+          <div className="mb-6">
+            <img src="/images/skillcat-labs-logo.png" alt="SkillCat Labs" className="h-8 w-auto" />
           </div>
           <h1 className="text-2xl font-semibold tracking-tight">
             Technician Logbook

@@ -22,12 +22,8 @@ export default async function ManagerLayout({
   return (
     <div className="min-h-screen flex flex-col">
       <header className="border-b border-border bg-card px-6 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="size-7 rounded-md bg-gradient-to-b from-skillcat-orange-bright to-skillcat-orange shrink-0" />
-          <div>
-            <p className="text-xs text-muted-foreground leading-none">SkillCat</p>
-            <p className="text-sm font-semibold leading-tight">Technician Logbook</p>
-          </div>
+        <div className="flex items-center">
+          <img src="/images/skillcat-labs-logo.png" alt="SkillCat Labs" className="h-7 w-auto" />
         </div>
         <div className="flex items-center gap-3">
           <span className="text-xs text-muted-foreground hidden sm:block">

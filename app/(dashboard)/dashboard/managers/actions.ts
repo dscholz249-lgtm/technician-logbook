@@ -38,6 +38,7 @@ export async function sendManagerInvite(
     companyName: company.name,
     loginLink: linkData.properties.action_link,
     preferencesLink: `${env.PUBLIC_ORIGIN}/manager`,
+    origin: env.PUBLIC_ORIGIN,
   });
 
   const resend = new Resend(resendKey);
