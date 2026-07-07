@@ -1,6 +1,7 @@
 import { getQueue, getLogbook } from "@/lib/api";
 import { getCompanies } from "@/lib/supabase/db";
 import { RequestList } from "./request-list";
+import { AutoRefresh } from "@/components/auto-refresh";
 import type { QueueItem, LogbookEntry } from "@/lib/types";
 import type { CompanyWithRelations, Manager } from "@/lib/supabase/db";
 
@@ -50,7 +51,8 @@ function buildGroups(
   const tree = new Map<string, Map<string, UnifiedItem[]>>();
 
   function add(companyId: string | null, phone: string, item: UnifiedItem) {
-    const cid = companyId ?? "unknown";
+    // Resolve company from manager phone when company_id is absent (e.g. pre-sync requests)
+    const cid = companyId ?? phoneToManager.get(normalizePhone(phone))?.company_id ?? "unknown";
     if (!tree.has(cid)) tree.set(cid, new Map());
     const mg = tree.get(cid)!;
     if (!mg.has(phone)) mg.set(phone, []);
@@ -146,6 +148,7 @@ export default async function DashboardPage() {
       </div>
 
       <RequestList groups={groups} />
+      <AutoRefresh intervalMs={20000} />
     </div>
   );
 }

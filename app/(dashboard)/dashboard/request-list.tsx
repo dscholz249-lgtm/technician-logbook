@@ -28,10 +28,11 @@ function itemDescription(item: UnifiedItem): { name: string; description: string
     };
   }
   if (item.data.type === "add_employee") {
-    const e = p.new_employee as Record<string, string> | null ?? {};
+    const name = String(p.name ?? "—");
+    const detail = [p.email, p.title].filter(Boolean).join(", ");
     return {
-      name: e.name ?? "—",
-      description: `Add employee — ${e.name}${e.email ? `, ${e.email}` : ""}${e.title ? `, ${e.title}` : ""}`,
+      name,
+      description: `Add employee — ${name}${detail ? `, ${detail}` : ""}`,
     };
   }
   return { name: "—", description: String(p) };

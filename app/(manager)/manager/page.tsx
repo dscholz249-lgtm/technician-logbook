@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AutoRefresh } from "@/components/auto-refresh";
 import { createClient } from "@/lib/supabase/server";
 import { getManagerByEmail, getCompanies } from "@/lib/supabase/db";
 import { getQueue, getLogbook } from "@/lib/api";
@@ -35,7 +36,7 @@ function buildTechGroups(queue: QueueItem[], logbook: LogbookEntry[]) {
     const name = q.type === "assign_training"
       ? String(p.employee_name ?? "Unknown")
       : q.type === "add_employee"
-        ? String((p.new_employee as Record<string, string> | null)?.name ?? "Unknown")
+        ? String(p.name ?? "Unknown")
         : "Unknown";
     add(name, { kind: "assignment", data: q, techName: name });
   }
@@ -164,6 +165,7 @@ export default async function ManagerPage() {
 
         {/* All technicians */}
         <TechnicianTable technicians={technicians} />
+        <AutoRefresh intervalMs={20000} />
     </div>
   );
 }
