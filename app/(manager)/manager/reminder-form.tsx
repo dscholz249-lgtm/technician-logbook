@@ -39,7 +39,7 @@ export function ReminderForm({ current }: { current: ReminderPreference }) {
                 "rounded-lg border px-3 py-2 text-left transition-colors",
                 active
                   ? "border-skillcat-orange bg-skillcat-orange/10 text-foreground"
-                  : "border-border bg-card text-muted-foreground hover:border-muted-foreground",
+                  : "border-border bg-card text-muted-foreground hover:border-muted-foreground hover:text-foreground",
                 pending ? "opacity-50 cursor-not-allowed" : "cursor-pointer",
               ].join(" ")}
             >

@@ -29,7 +29,7 @@ export function PhoneForm({ currentPhone }: { currentPhone: string | null }) {
     return (
       <div className="flex items-center gap-3">
         <div>
-          <p className="text-xs text-muted-foreground">Your SMS number</p>
+          <p className="text-xs text-muted-foreground">Your phone number</p>
           <p className="text-sm font-medium mt-0.5">
             {currentPhone ?? <span className="text-muted-foreground italic">Not set</span>}
           </p>
@@ -44,7 +44,7 @@ export function PhoneForm({ currentPhone }: { currentPhone: string | null }) {
   return (
     <form onSubmit={handleSubmit} className="flex items-end gap-2">
       <div className="space-y-1.5">
-        <Label htmlFor="phone">Your SMS number</Label>
+        <Label htmlFor="phone">Your phone number</Label>
         <Input
           id="phone"
           name="phone"

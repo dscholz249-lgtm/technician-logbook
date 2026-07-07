@@ -79,11 +79,12 @@ function TechnicianTable({ technicians }: { technicians: Technician[] }) {
                 <TableHead>Technician</TableHead>
                 <TableHead>Title</TableHead>
                 <TableHead>Email</TableHead>
+                <TableHead />
               </TableRow>
             </TableHeader>
             <TableBody>
               {technicians.map(t => (
-                <TableRow key={t.id}>
+                <TableRow key={t.id} className="hover:bg-muted/30 transition-colors">
                   <TableCell className="font-medium text-sm">
                     <Link href={`/manager/technician/${t.id}`} className="hover:underline">
                       {t.name}
@@ -91,6 +92,14 @@ function TechnicianTable({ technicians }: { technicians: Technician[] }) {
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">{t.title ?? "—"}</TableCell>
                   <TableCell className="text-xs text-muted-foreground">{t.email ?? "—"}</TableCell>
+                  <TableCell className="text-right">
+                    <Link
+                      href={`/manager/technician/${t.id}`}
+                      className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      View Logs →
+                    </Link>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -128,27 +137,53 @@ export default async function ManagerPage() {
           <p className="text-sm text-muted-foreground mt-0.5">{manager.name} · Read-only view</p>
         </div>
 
-        {/* SMS callout */}
-        <div className="rounded-xl border border-border bg-card px-4 py-3.5 flex items-start gap-3">
-          <div className="mt-0.5 size-7 rounded-md bg-skillcat-orange/15 flex items-center justify-center shrink-0 text-skillcat-orange text-base">
-            💬
+        {/* SMS features + settings */}
+        <div className="grid grid-cols-2 gap-4 items-start">
+          {/* Left: how it works */}
+          <div className="rounded-xl border border-border bg-card px-5 py-4 space-y-4">
+            <div>
+              <p className="text-sm font-semibold">Send updates by text</p>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                Text <span className="font-mono font-medium text-foreground">{SKILLCAT_SMS_NUMBER}</span>
+              </p>
+            </div>
+            <div className="space-y-3">
+              {[
+                {
+                  n: "01",
+                  title: "Lookup and assign courses",
+                  body: "Just let us know who you want to assign and which course. Don't know which course? Just ask.",
+                },
+                {
+                  n: "02",
+                  title: "Add new technicians",
+                  body: "Tell us the new tech's name and email and we'll add them to your roster.",
+                },
+                {
+                  n: "03",
+                  title: "Leave a note",
+                  body: "Flag anything about a technician and we'll save it to their record in your dashboard.",
+                },
+              ].map(f => (
+                <div key={f.n} className="flex gap-3">
+                  <span className="text-xs font-bold text-skillcat-orange mt-0.5 shrink-0 w-5">{f.n}</span>
+                  <div>
+                    <p className="text-xs font-semibold text-foreground">{f.title}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{f.body}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
-          <div>
-            <p className="text-sm font-medium">Send updates by text</p>
-            <p className="text-sm text-muted-foreground mt-0.5">
-              Text <span className="font-mono font-medium text-foreground">{SKILLCAT_SMS_NUMBER}</span> to
-              add a note about a technician or assign them to a new training.
-            </p>
-          </div>
-        </div>
 
-        {/* Settings row */}
-        <div className="flex flex-wrap gap-4">
-          <div className="rounded-xl border border-border bg-card px-4 py-3">
-            <PhoneForm currentPhone={manager.phone} />
-          </div>
-          <div className="rounded-xl border border-border bg-card px-4 py-3">
-            <ReminderForm current={manager.reminder_preference ?? "never"} />
+          {/* Right: phone + reminders */}
+          <div className="space-y-3">
+            <div className="rounded-xl border border-border bg-card px-4 py-3">
+              <PhoneForm currentPhone={manager.phone} />
+            </div>
+            <div className="rounded-xl border border-border bg-card px-4 py-3">
+              <ReminderForm current={manager.reminder_preference ?? "never"} />
+            </div>
           </div>
         </div>
 
