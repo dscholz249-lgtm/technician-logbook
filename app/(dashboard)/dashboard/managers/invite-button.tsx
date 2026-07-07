@@ -1,33 +1,26 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import { sendManagerInvite } from "./actions";
 
 export function InviteButton({ managerId }: { managerId: string }) {
-  const [state, setState] = useState<"idle" | "sending" | "sent" | "error">("idle");
-  const [errorMsg, setErrorMsg] = useState("");
+  const [state, setState] = useState<"idle" | "sending" | "sent">("idle");
 
   async function handleClick() {
     setState("sending");
     const result = await sendManagerInvite(managerId);
     if (result.error) {
-      setErrorMsg(result.error);
-      setState("error");
+      setState("idle");
+      toast.error(result.error);
     } else {
       setState("sent");
+      toast.success("Invite sent.");
     }
   }
 
   if (state === "sent") {
     return <span className="text-xs text-green-500 font-medium">Sent</span>;
-  }
-
-  if (state === "error") {
-    return (
-      <span className="text-xs text-destructive" title={errorMsg}>
-        Failed
-      </span>
-    );
   }
 
   return (

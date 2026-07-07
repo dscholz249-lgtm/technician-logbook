@@ -23,7 +23,7 @@ export async function sendManagerInvite(
   const adminClient = createAdminClient();
 
   const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
-    type: "invite",
+    type: "magiclink",
     email: manager.email,
     options: { redirectTo: `${env.PUBLIC_ORIGIN}/auth/callback` },
   });
