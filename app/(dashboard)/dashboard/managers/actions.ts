@@ -25,7 +25,7 @@ export async function sendManagerInvite(
   const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
     type: "magiclink",
     email: manager.email,
-    options: { redirectTo: `${env.PUBLIC_ORIGIN}/auth/callback` },
+    options: { redirectTo: `${env.PUBLIC_ORIGIN}/auth/confirm` },
   });
 
   if (linkError || !linkData?.properties?.action_link) {

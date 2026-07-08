@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { createBrowserClient } from "@supabase/ssr";
 
-export function HashExchange() {
+export default function ConfirmPage() {
   useEffect(() => {
     async function exchange() {
       const supabase = createBrowserClient(
@@ -11,7 +11,7 @@ export function HashExchange() {
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       );
 
-      // Try auto-detected session first (covers cases where SSR client did parse it)
+      // Try auto-detected session first
       const { data: { session: existing } } = await supabase.auth.getSession();
       if (existing) {
         window.location.replace("/auth/callback?confirmed=1");
@@ -23,7 +23,6 @@ export function HashExchange() {
       if (hash) {
         const params = new URLSearchParams(hash);
 
-        // Supabase may send an error in the hash (e.g. token already used)
         const errorDesc = params.get("error_description") || params.get("error");
         if (errorDesc) {
           window.location.replace(`/auth/sign-in?error=${encodeURIComponent(errorDesc)}`);
