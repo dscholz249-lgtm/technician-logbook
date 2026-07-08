@@ -6,6 +6,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getCompanies } from "@/lib/supabase/db";
 import { env } from "@/lib/env";
 import { buildInviteEmail } from "@/lib/email/invite";
+import { capture } from "@/lib/analytics";
 
 export async function sendManagerInvite(
   managerId: string,
@@ -50,6 +51,8 @@ export async function sendManagerInvite(
   });
 
   if (sendError) return { error: sendError.message };
+
+  await capture(manager.email, "invite_sent", { company_id: company.id, company_name: company.name });
 
   revalidatePath("/dashboard/managers");
   return { sent: true };

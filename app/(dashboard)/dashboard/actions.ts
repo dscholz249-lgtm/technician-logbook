@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { markActioned } from "@/lib/api";
+import { capture } from "@/lib/analytics";
 
 export async function actionQueueItem(
   id: number,
@@ -19,6 +20,7 @@ export async function actionQueueItem(
 
   try {
     await markActioned(id, user.email, note);
+    await capture(user.email, "request_actioned", { item_id: id });
     revalidatePath("/dashboard");
     return {};
   } catch (err) {
