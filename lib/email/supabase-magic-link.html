@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your sign-in link</title>
+</head>
+<body style="margin:0; padding:0; background-color:#0a0a0a; font-family:'Fira Sans', Arial, Helvetica, sans-serif;">
+
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#0a0a0a; padding:40px 0;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px; width:100%; background-color:#141414; border-radius:12px; overflow:hidden; border:1px solid #242424;">
+
+          <tr>
+            <td style="padding:32px 36px 0;">
+              <img src="https://technician-logbook-production.up.railway.app/images/skillcat-labs-logo.png" alt="SkillCat Labs" width="110" style="display:block; max-width:110px;" />
+            </td>
+          </tr>
+
+          <!-- Divider -->
+          <tr>
+            <td style="padding:24px 36px 0;">
+              <div style="height:1px; background-color:#242424;"></div>
+            </td>
+          </tr>
+
+          <!-- Heading -->
+          <tr>
+            <td style="padding:28px 36px 10px;">
+              <h1 style="margin:0; color:#ffffff; font-size:21px; font-weight:700; letter-spacing:-0.02em; line-height:1.2;">
+                Your sign-in link
+              </h1>
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="padding:0 36px 28px;">
+              <p style="margin:0; color:#A8A8A8; font-size:14px; line-height:1.65; max-width:44ch;">
+                Click below to sign in to your Technician Logbook dashboard.
+                This link is single-use and expires in 24 hours.
+              </p>
+            </td>
+          </tr>
+
+          <!-- CTA -->
+          <tr>
+            <td style="padding:0 36px 20px;">
+              <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+                <tr>
+                  <td align="center" style="border-radius:8px; background-color:#F05523;">
+                    <a href="{{ .ConfirmationURL }}" target="_blank" style="display:block; padding:13px 0; font-size:14px; font-weight:700; color:#ffffff; text-decoration:none; text-align:center; letter-spacing:0.01em;">
+                      Sign in to dashboard
+                    </a>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Security note -->
+          <tr>
+            <td style="padding:0 36px 32px;">
+              <p style="margin:0; color:#555555; font-size:11.5px; line-height:1.6;">
+                If you didn&apos;t request this link, you can safely ignore this email. Your account won&apos;t be affected.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+
+        <!-- Footer -->
+        <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px; width:100%; padding:16px 36px 0;">
+          <tr>
+            <td style="color:#444444; font-size:11px; line-height:1.6; text-align:center;">
+              SkillCat Inc. &middot; Technician Logbook<br>
+              You&apos;re receiving this because a sign-in was requested for this address.
+            </td>
+          </tr>
+        </table>
+
+      </td>
+    </tr>
+  </table>
+
+</body>
+</html>
