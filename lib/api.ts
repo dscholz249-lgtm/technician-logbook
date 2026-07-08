@@ -35,6 +35,28 @@ export async function getLogbook(companyId?: string): Promise<LogbookEntry[]> {
   return apiFetch<LogbookEntry[]>(`/api/logbook${qs}`);
 }
 
+export interface DayMetric { date: string; inbound: number; outbound: number }
+export interface TypeMetric { type: string; total: number; actioned: number }
+export interface AnalyticsData {
+  messages_by_day: DayMetric[];
+  requests_by_type: TypeMetric[];
+  totals: {
+    inbound_messages: number;
+    outbound_messages: number;
+    requests_total: number;
+    requests_actioned: number;
+  };
+}
+
+export async function getAnalytics(
+  companyId: string,
+  managerPhone?: string | null,
+): Promise<AnalyticsData> {
+  const params = new URLSearchParams({ company_id: companyId });
+  if (managerPhone) params.set("manager_phone", managerPhone);
+  return apiFetch<AnalyticsData>(`/api/analytics?${params}`);
+}
+
 export async function markActioned(
   id: number,
   actionedBy: string,

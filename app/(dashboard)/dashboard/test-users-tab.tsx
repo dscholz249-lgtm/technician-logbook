@@ -15,7 +15,8 @@ import {
   Table, TableHeader, TableBody, TableHead, TableRow, TableCell,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { PlusIcon, PencilIcon, Trash2Icon } from "lucide-react";
+import Link from "next/link";
+import { PlusIcon, PencilIcon, Trash2Icon, ArrowRightIcon } from "lucide-react";
 
 function CompanyForm({
   company,
@@ -185,6 +186,11 @@ export function TestUsersTab({ companies }: { companies: CompanyWithRelations[] 
                           <PencilIcon />
                         </Button>
                         <DeleteButton companyId={c.id} name={c.name} />
+                        <Button variant="ghost" size="icon-sm" asChild>
+                          <Link href={`/dashboard/companies/${c.id}`}>
+                            <ArrowRightIcon />
+                          </Link>
+                        </Button>
                       </div>
                     </TableCell>
                   </TableRow>
