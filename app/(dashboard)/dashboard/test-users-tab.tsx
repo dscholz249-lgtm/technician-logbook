@@ -17,6 +17,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { PlusIcon, PencilIcon, Trash2Icon, ArrowRightIcon } from "lucide-react";
+import { buttonVariants } from "@/components/ui/button";
 
 function CompanyForm({
   company,
@@ -186,11 +187,12 @@ export function TestUsersTab({ companies }: { companies: CompanyWithRelations[] 
                           <PencilIcon />
                         </Button>
                         <DeleteButton companyId={c.id} name={c.name} />
-                        <Button variant="ghost" size="icon-sm" asChild>
-                          <Link href={`/dashboard/companies/${c.id}`}>
-                            <ArrowRightIcon />
-                          </Link>
-                        </Button>
+                        <Link
+                          href={`/dashboard/companies/${c.id}`}
+                          className={buttonVariants({ variant: "ghost", size: "icon-sm" })}
+                        >
+                          <ArrowRightIcon />
+                        </Link>
                       </div>
                     </TableCell>
                   </TableRow>
