@@ -134,25 +134,10 @@ export function buildInviteEmail({
             </td>
           </tr>
 
-          <!-- SMS screenshot -->
           <tr>
             <td style="padding:0 40px 28px;">
-              <img src="${origin}/images/sms-example.png" alt="Example SMS conversation" width="520" style="display:block; max-width:100%; border-radius:10px;" />
-            </td>
-          </tr>
-
-          <tr>
-            <td style="padding:0 40px 8px;">
               <p style="margin:0; color:#ffffff; font-size:14.5px; line-height:1.65; font-weight:600;">
                 All of that from just a quick text message to (251) 313-5407. That&apos;s it.
-              </p>
-            </td>
-          </tr>
-
-          <tr>
-            <td style="padding:0 40px 28px;">
-              <p style="margin:0; color:#A8A8A8; font-size:14.5px; line-height:1.65;">
-                Your dashboard gives you a full view of every request your team has made, and lets you action them in one place.
               </p>
             </td>
           </tr>
