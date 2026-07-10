@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { InboxIcon, BookOpenIcon, BuildingIcon, UsersIcon, HelpCircleIcon } from "lucide-react";
+import { InboxIcon, BookOpenIcon, BuildingIcon, UsersIcon, HelpCircleIcon, BarChart2Icon } from "lucide-react";
 
 const NAV = [
   {
@@ -17,6 +17,7 @@ const NAV = [
     items: [
       { href: "/dashboard/companies", label: "Companies", icon: BuildingIcon },
       { href: "/dashboard/managers", label: "Field Managers", icon: UsersIcon },
+      { href: "/dashboard/analytics", label: "Analytics", icon: BarChart2Icon },
     ],
   },
   {

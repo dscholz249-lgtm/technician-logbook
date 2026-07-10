@@ -11,6 +11,9 @@ const EMPTY_ANALYTICS = {
   messages_by_day: [],
   requests_by_type: [],
   totals: { inbound_messages: 0, outbound_messages: 0, requests_total: 0, requests_actioned: 0 },
+  dau: 0,
+  mau: 0,
+  retention: { day_2: null, day_7: null, day_30: null },
 };
 
 export default async function CompanyDetailPage({
@@ -26,11 +29,25 @@ export default async function CompanyDetailPage({
   const primaryPhone = company.managers[0]?.phone ?? null;
   const analytics = await getAnalytics(company.id, primaryPhone).catch(() => EMPTY_ANALYTICS);
 
-  const { totals } = analytics;
+  const { totals, dau, mau, retention } = analytics;
   const actionRate =
     totals.requests_total > 0
       ? `${Math.round((totals.requests_actioned / totals.requests_total) * 100)}%`
       : "—";
+
+  function retentionBadge(value: boolean | null, label: string) {
+    if (value === null) return (
+      <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+        <span className="font-medium">{label}</span> —
+      </span>
+    );
+    return (
+      <span className={`inline-flex items-center gap-1 text-xs font-medium ${value ? "text-emerald-500" : "text-muted-foreground"}`}>
+        <span>{label}</span>
+        <span>{value ? "✓" : "✗"}</span>
+      </span>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -44,9 +61,14 @@ export default async function CompanyDetailPage({
           Companies
         </Link>
         <h1 className="text-xl font-semibold">{company.name}</h1>
+        {(company.industry || company.size) && (
+          <p className="text-sm text-muted-foreground mt-0.5">
+            {[company.industry, company.size].filter(Boolean).join(" · ")}
+          </p>
+        )}
       </div>
 
-      {/* Stats row */}
+      {/* Stats — row 1: messaging */}
       <div className="grid grid-cols-4 gap-3">
         <StatCard label="Inbound messages" value={totals.inbound_messages} />
         <StatCard label="Total requests" value={totals.requests_total} />
@@ -54,8 +76,41 @@ export default async function CompanyDetailPage({
         <StatCard label="Action rate" value={actionRate} />
       </div>
 
+      {/* Stats — row 2: engagement */}
+      <div className="grid grid-cols-3 gap-3">
+        <StatCard label="Active today (DAU)" value={dau} />
+        <StatCard label="Active this month (MAU)" value={mau} />
+        <div className="rounded-xl border border-border bg-card px-5 py-4">
+          <p className="text-xs text-muted-foreground mb-2">Retention</p>
+          <div className="flex items-center gap-4">
+            {retentionBadge(retention.day_2,  "2d")}
+            {retentionBadge(retention.day_7,  "7d")}
+            {retentionBadge(retention.day_30, "30d")}
+          </div>
+        </div>
+      </div>
+
       {/* Charts */}
       <CompanyCharts data={analytics} />
+
+      {/* Company info */}
+      <section className="space-y-3">
+        <h2 className="text-sm font-semibold">Company info</h2>
+        <div className="rounded-xl border border-border bg-card px-5 py-4 grid grid-cols-3 gap-4">
+          <div>
+            <p className="text-xs text-muted-foreground mb-0.5">Industry</p>
+            <p className="text-sm">{company.industry ?? <span className="text-muted-foreground">—</span>}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground mb-0.5">Size</p>
+            <p className="text-sm">{company.size ?? <span className="text-muted-foreground">—</span>}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground mb-0.5">Technicians on file</p>
+            <p className="text-sm">{company.technicians.length}</p>
+          </div>
+        </div>
+      </section>
 
       {/* Manager */}
       <section className="space-y-3">

@@ -59,6 +59,17 @@ function CompanyForm({
 
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1.5">
+          <Label htmlFor="industry">Industry <span className="text-muted-foreground text-xs">(optional)</span></Label>
+          <Input id="industry" name="industry" defaultValue={company?.industry ?? ""} placeholder="e.g. HVAC, Electrical" />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="size">Size <span className="text-muted-foreground text-xs">(optional)</span></Label>
+          <Input id="size" name="size" defaultValue={company?.size ?? ""} placeholder="e.g. 12 employees" />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1.5">
           <Label htmlFor="manager_name">Manager name</Label>
           <Input id="manager_name" name="manager_name" defaultValue={manager?.name} required />
         </div>

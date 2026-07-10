@@ -26,6 +26,8 @@ function parseCsv(raw: string): { name: string; email: string | null; title: str
 export async function saveCompany(formData: FormData): Promise<{ error?: string }> {
   const companyId = formData.get("company_id") as string | null;
   const companyName = (formData.get("company_name") as string)?.trim();
+  const industry = (formData.get("industry") as string)?.trim() || null;
+  const size = (formData.get("size") as string)?.trim() || null;
   const managerId = formData.get("manager_id") as string | null;
   const managerName = (formData.get("manager_name") as string)?.trim();
   const managerEmail = (formData.get("manager_email") as string)?.trim().toLowerCase();
@@ -37,7 +39,7 @@ export async function saveCompany(formData: FormData): Promise<{ error?: string 
   }
 
   try {
-    const company = await upsertCompany(companyName, companyId || undefined);
+    const company = await upsertCompany(companyName, companyId || undefined, { industry, size });
 
     const manager = await upsertManager(
       company.id,

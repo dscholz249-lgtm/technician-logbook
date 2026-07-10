@@ -37,6 +37,11 @@ export async function getLogbook(companyId?: string): Promise<LogbookEntry[]> {
 
 export interface DayMetric { date: string; inbound: number; outbound: number }
 export interface TypeMetric { type: string; total: number; actioned: number }
+export interface RetentionData {
+  day_2: boolean | null;
+  day_7: boolean | null;
+  day_30: boolean | null;
+}
 export interface AnalyticsData {
   messages_by_day: DayMetric[];
   requests_by_type: TypeMetric[];
@@ -46,6 +51,24 @@ export interface AnalyticsData {
     requests_total: number;
     requests_actioned: number;
   };
+  dau: number;
+  mau: number;
+  retention: RetentionData;
+}
+
+export interface DauTrendPoint { date: string; unique_users: number }
+export interface GlobalRetention {
+  total_managers: number;
+  day_2: number | null;
+  day_7: number | null;
+  day_30: number | null;
+}
+export interface GlobalAnalyticsData {
+  dau: number;
+  mau: number;
+  dau_trend: DauTrendPoint[];
+  requests_by_type: TypeMetric[];
+  retention: GlobalRetention;
 }
 
 export async function getAnalytics(
@@ -55,6 +78,10 @@ export async function getAnalytics(
   const params = new URLSearchParams({ company_id: companyId });
   if (managerPhone) params.set("manager_phone", managerPhone);
   return apiFetch<AnalyticsData>(`/api/analytics?${params}`);
+}
+
+export async function getGlobalAnalytics(): Promise<GlobalAnalyticsData> {
+  return apiFetch<GlobalAnalyticsData>("/api/analytics/global");
 }
 
 export async function markActioned(

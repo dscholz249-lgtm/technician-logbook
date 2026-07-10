@@ -4,6 +4,8 @@ import { createAdminClient } from "./admin";
 export interface Company {
   id: string;
   name: string;
+  industry: string | null;
+  size: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -54,12 +56,13 @@ export async function getCompanies(): Promise<CompanyWithRelations[]> {
 export async function upsertCompany(
   name: string,
   companyId?: string,
+  extra?: { industry?: string | null; size?: string | null },
 ): Promise<Company> {
   const db = createAdminClient();
   if (companyId) {
     const { data, error } = await db
       .from("companies")
-      .update({ name, updated_at: new Date().toISOString() })
+      .update({ name, industry: extra?.industry ?? null, size: extra?.size ?? null, updated_at: new Date().toISOString() })
       .eq("id", companyId)
       .select()
       .single();
@@ -68,7 +71,7 @@ export async function upsertCompany(
   }
   const { data, error } = await db
     .from("companies")
-    .insert({ name })
+    .insert({ name, industry: extra?.industry ?? null, size: extra?.size ?? null })
     .select()
     .single();
   if (error) throw error;
