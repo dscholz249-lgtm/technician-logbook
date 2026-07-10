@@ -2,8 +2,8 @@
 
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import type { CompanyWithRelations } from "@/lib/supabase/db";
-import { saveCompany, removeCompany, syncAllCompanies } from "./company-actions";
+import type { CompanyWithRelations, Manager } from "@/lib/supabase/db";
+import { saveCompany, removeCompany, syncAllCompanies, addManager, removeManager } from "./company-actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,8 +16,107 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
-import { PlusIcon, PencilIcon, Trash2Icon, ArrowRightIcon } from "lucide-react";
+import { PlusIcon, PencilIcon, Trash2Icon, ArrowRightIcon, UserPlusIcon } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
+
+function ManagerRow({ manager, companyId }: { manager: Manager; companyId: string }) {
+  const [confirming, setConfirming] = useState(false);
+  const [pending, startTransition] = useTransition();
+
+  function handleRemove() {
+    startTransition(async () => {
+      const result = await removeManager(manager.id, companyId);
+      if (result.error) toast.error(result.error);
+      else toast.success(`${manager.name} removed.`);
+      setConfirming(false);
+    });
+  }
+
+  return (
+    <div className="flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-muted/40 group">
+      <div className="min-w-0">
+        <p className="text-sm font-medium truncate">{manager.name}</p>
+        <p className="text-xs text-muted-foreground truncate">{manager.email}{manager.phone ? ` · ${manager.phone}` : ""}</p>
+      </div>
+      <div className="flex items-center gap-1 ml-2 shrink-0">
+        {confirming ? (
+          <>
+            <span className="text-xs text-muted-foreground mr-1">Remove?</span>
+            <Button size="sm" variant="destructive" onClick={handleRemove} disabled={pending}>
+              {pending ? "Removing…" : "Yes"}
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => setConfirming(false)} disabled={pending}>
+              No
+            </Button>
+          </>
+        ) : (
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            className="opacity-0 group-hover:opacity-100"
+            onClick={() => setConfirming(true)}
+          >
+            <Trash2Icon />
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function AddManagerForm({ companyId, onAdded }: { companyId: string; onAdded: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [pending, startTransition] = useTransition();
+
+  function handleSubmit(e: { preventDefault(): void; currentTarget: HTMLFormElement }) {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
+    fd.set("company_id", companyId);
+    startTransition(async () => {
+      const result = await addManager(fd);
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success("Manager added.");
+        e.currentTarget.reset();
+        setOpen(false);
+        onAdded();
+      }
+    });
+  }
+
+  if (!open) {
+    return (
+      <Button type="button" variant="outline" size="sm" className="w-full" onClick={() => setOpen(true)}>
+        <UserPlusIcon className="size-3.5" /> Add manager
+      </Button>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-3 rounded-lg border border-border p-3">
+      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">New manager</p>
+      <div className="grid grid-cols-2 gap-2">
+        <div className="space-y-1">
+          <Label htmlFor="add_manager_name" className="text-xs">Name</Label>
+          <Input id="add_manager_name" name="manager_name" required className="h-8 text-sm" />
+        </div>
+        <div className="space-y-1">
+          <Label htmlFor="add_manager_email" className="text-xs">Email</Label>
+          <Input id="add_manager_email" name="manager_email" type="email" required className="h-8 text-sm" />
+        </div>
+      </div>
+      <div className="space-y-1">
+        <Label htmlFor="add_manager_phone" className="text-xs">Phone <span className="text-muted-foreground">(optional)</span></Label>
+        <Input id="add_manager_phone" name="manager_phone" type="tel" placeholder="+1 555 000 0000" className="h-8 text-sm" />
+      </div>
+      <div className="flex gap-2">
+        <Button type="submit" size="sm" disabled={pending}>{pending ? "Adding…" : "Add"}</Button>
+        <Button type="button" size="sm" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+      </div>
+    </form>
+  );
+}
 
 function CompanyForm({
   company,
@@ -26,7 +125,7 @@ function CompanyForm({
   company?: CompanyWithRelations;
   onClose: () => void;
 }) {
-  const manager = company?.managers[0];
+  const isEdit = !!company;
   const techCsv = company?.technicians
     .map(t => [t.name, t.email ?? "", t.title ?? ""].join(","))
     .join("\n") ?? "";
@@ -50,7 +149,6 @@ function CompanyForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       {company && <input type="hidden" name="company_id" value={company.id} />}
-      {manager && <input type="hidden" name="manager_id" value={manager.id} />}
 
       <div className="space-y-1.5">
         <Label htmlFor="company_name">Company name</Label>
@@ -68,23 +166,40 @@ function CompanyForm({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1.5">
-          <Label htmlFor="manager_name">Manager name</Label>
-          <Input id="manager_name" name="manager_name" defaultValue={manager?.name} required />
+      {isEdit ? (
+        <div className="space-y-2">
+          <Label>Managers</Label>
+          <div className="rounded-lg border border-border divide-y divide-border">
+            {company.managers.length === 0 ? (
+              <p className="py-3 text-center text-sm text-muted-foreground">No active managers.</p>
+            ) : (
+              company.managers.map(m => (
+                <ManagerRow key={m.id} manager={m} companyId={company.id} />
+              ))
+            )}
+          </div>
+          <AddManagerForm companyId={company.id} onAdded={() => {}} />
         </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="manager_email">Manager email</Label>
-          <Input id="manager_email" name="manager_email" type="email" defaultValue={manager?.email} required />
-        </div>
-      </div>
-
-      <div className="space-y-1.5">
-        <Label htmlFor="manager_phone">
-          Manager phone <span className="text-muted-foreground text-xs">(optional)</span>
-        </Label>
-        <Input id="manager_phone" name="manager_phone" type="tel" defaultValue={manager?.phone ?? ""} placeholder="+1 555 000 0000" />
-      </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="manager_name">Manager name</Label>
+              <Input id="manager_name" name="manager_name" required />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="manager_email">Manager email</Label>
+              <Input id="manager_email" name="manager_email" type="email" required />
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="manager_phone">
+              Manager phone <span className="text-muted-foreground text-xs">(optional)</span>
+            </Label>
+            <Input id="manager_phone" name="manager_phone" type="tel" placeholder="+1 555 000 0000" />
+          </div>
+        </>
+      )}
 
       <div className="space-y-1.5">
         <Label htmlFor="technicians_csv">
@@ -171,44 +286,53 @@ export function TestUsersTab({ companies }: { companies: CompanyWithRelations[] 
             <TableHeader>
               <TableRow className="hover:bg-transparent">
                 <TableHead>Company</TableHead>
-                <TableHead>Manager</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Phone</TableHead>
+                <TableHead>Managers</TableHead>
                 <TableHead>Technicians</TableHead>
                 <TableHead />
               </TableRow>
             </TableHeader>
             <TableBody>
-              {companies.map(c => {
-                const m = c.managers[0];
-                return (
-                  <TableRow key={c.id}>
-                    <TableCell className="font-medium">{c.name}</TableCell>
-                    <TableCell>{m?.name ?? <span className="text-muted-foreground">—</span>}</TableCell>
-                    <TableCell className="text-xs text-muted-foreground">{m?.email ?? "—"}</TableCell>
-                    <TableCell>
-                      {m?.phone
-                        ? <span className="text-xs font-mono">{m.phone}</span>
-                        : <Badge variant="outline" className="text-[10px]">Not set</Badge>}
-                    </TableCell>
-                    <TableCell className="text-xs text-muted-foreground">{c.technicians.length}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <Button variant="ghost" size="icon-sm" onClick={() => setEditing(c)}>
-                          <PencilIcon />
-                        </Button>
-                        <DeleteButton companyId={c.id} name={c.name} />
-                        <Link
-                          href={`/dashboard/companies/${c.id}`}
-                          className={buttonVariants({ variant: "ghost", size: "icon-sm" })}
-                        >
-                          <ArrowRightIcon />
-                        </Link>
+              {companies.map(c => (
+                <TableRow key={c.id}>
+                  <TableCell className="font-medium">
+                    <div>{c.name}</div>
+                    {(c.industry || c.size) && (
+                      <div className="text-xs text-muted-foreground mt-0.5">
+                        {[c.industry, c.size].filter(Boolean).join(" · ")}
                       </div>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {c.managers.length === 0 ? (
+                      <span className="text-muted-foreground text-xs">—</span>
+                    ) : (
+                      <div className="space-y-0.5">
+                        {c.managers.map(m => (
+                          <div key={m.id} className="text-xs">
+                            <span className="font-medium">{m.name}</span>
+                            <span className="text-muted-foreground ml-1">{m.email}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-xs text-muted-foreground">{c.technicians.length}</TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      <Button variant="ghost" size="icon-sm" onClick={() => setEditing(c)}>
+                        <PencilIcon />
+                      </Button>
+                      <DeleteButton companyId={c.id} name={c.name} />
+                      <Link
+                        href={`/dashboard/companies/${c.id}`}
+                        className={buttonVariants({ variant: "ghost", size: "icon-sm" })}
+                      >
+                        <ArrowRightIcon />
+                      </Link>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
             </TableBody>
           </Table>
         </div>

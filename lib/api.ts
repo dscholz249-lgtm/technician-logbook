@@ -38,9 +38,10 @@ export async function getLogbook(companyId?: string): Promise<LogbookEntry[]> {
 export interface DayMetric { date: string; inbound: number; outbound: number }
 export interface TypeMetric { type: string; total: number; actioned: number }
 export interface RetentionData {
-  day_2: boolean | null;
-  day_7: boolean | null;
-  day_30: boolean | null;
+  total_managers: number;
+  day_2: number | null;
+  day_7: number | null;
+  day_30: number | null;
 }
 export interface AnalyticsData {
   messages_by_day: DayMetric[];
@@ -73,10 +74,11 @@ export interface GlobalAnalyticsData {
 
 export async function getAnalytics(
   companyId: string,
-  managerPhone?: string | null,
+  managerPhones: string[],
 ): Promise<AnalyticsData> {
   const params = new URLSearchParams({ company_id: companyId });
-  if (managerPhone) params.set("manager_phone", managerPhone);
+  const phones = managerPhones.filter(Boolean);
+  if (phones.length > 0) params.set("manager_phones", phones.join(","));
   return apiFetch<AnalyticsData>(`/api/analytics?${params}`);
 }
 

@@ -13,7 +13,7 @@ const EMPTY_ANALYTICS = {
   totals: { inbound_messages: 0, outbound_messages: 0, requests_total: 0, requests_actioned: 0 },
   dau: 0,
   mau: 0,
-  retention: { day_2: null, day_7: null, day_30: null },
+  retention: { total_managers: 0, day_2: null, day_7: null, day_30: null },
 };
 
 export default async function CompanyDetailPage({
@@ -26,8 +26,8 @@ export default async function CompanyDetailPage({
   const company = companies.find(c => c.id === id);
   if (!company) notFound();
 
-  const primaryPhone = company.managers[0]?.phone ?? null;
-  const analytics = await getAnalytics(company.id, primaryPhone).catch(() => EMPTY_ANALYTICS);
+  const managerPhones = company.managers.map(m => m.phone).filter((p): p is string => !!p);
+  const analytics = await getAnalytics(company.id, managerPhones).catch(() => EMPTY_ANALYTICS);
 
   const { totals, dau, mau, retention } = analytics;
   const actionRate =
@@ -35,16 +35,16 @@ export default async function CompanyDetailPage({
       ? `${Math.round((totals.requests_actioned / totals.requests_total) * 100)}%`
       : "—";
 
-  function retentionBadge(value: boolean | null, label: string) {
+  function retentionBadge(value: number | null, label: string) {
     if (value === null) return (
       <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
         <span className="font-medium">{label}</span> —
       </span>
     );
     return (
-      <span className={`inline-flex items-center gap-1 text-xs font-medium ${value ? "text-emerald-500" : "text-muted-foreground"}`}>
+      <span className={`inline-flex items-center gap-1 text-xs font-semibold ${value >= 50 ? "text-emerald-500" : "text-muted-foreground"}`}>
         <span>{label}</span>
-        <span>{value ? "✓" : "✗"}</span>
+        <span>{value}%</span>
       </span>
     );
   }

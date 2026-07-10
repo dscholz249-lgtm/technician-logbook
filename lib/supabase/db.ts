@@ -21,6 +21,7 @@ export interface Manager {
   reminder_preference: ReminderPreference;
   created_at: string;
   updated_at: string;
+  deleted_at: string | null;
 }
 
 export interface Technician {
@@ -43,7 +44,7 @@ export async function getCompanies(): Promise<CompanyWithRelations[]> {
   const { data: companies, error } = await db.from("companies").select("*").order("name");
   if (error) throw error;
 
-  const { data: managers } = await db.from("managers").select("*");
+  const { data: managers } = await db.from("managers").select("*").is("deleted_at", null);
   const { data: technicians } = await db.from("technicians").select("*");
 
   return (companies ?? []).map(c => ({
@@ -116,6 +117,7 @@ export async function getManagerByEmail(email: string): Promise<Manager | null> 
     .from("managers")
     .select("*")
     .eq("email", email.toLowerCase())
+    .is("deleted_at", null)
     .maybeSingle();
   if (error) throw error;
   return data;
@@ -129,6 +131,15 @@ export async function updateManagerPhone(
   const { error } = await db
     .from("managers")
     .update({ phone, updated_at: new Date().toISOString() })
+    .eq("id", managerId);
+  if (error) throw error;
+}
+
+export async function softDeleteManager(managerId: string): Promise<void> {
+  const db = createAdminClient();
+  const { error } = await db
+    .from("managers")
+    .update({ deleted_at: new Date().toISOString() })
     .eq("id", managerId);
   if (error) throw error;
 }

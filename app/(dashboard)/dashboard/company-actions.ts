@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import {
   upsertCompany, upsertManager, replaceTechnicians,
-  deleteCompany, getCompanies,
+  deleteCompany, getCompanies, softDeleteManager,
 } from "@/lib/supabase/db";
 import { syncCompanyToExpress } from "@/lib/sync";
 
@@ -25,34 +25,36 @@ function parseCsv(raw: string): { name: string; email: string | null; title: str
 
 export async function saveCompany(formData: FormData): Promise<{ error?: string }> {
   const companyId = formData.get("company_id") as string | null;
+  const isEdit = !!companyId;
   const companyName = (formData.get("company_name") as string)?.trim();
   const industry = (formData.get("industry") as string)?.trim() || null;
   const size = (formData.get("size") as string)?.trim() || null;
-  const managerId = formData.get("manager_id") as string | null;
+  const techniciansCsv = (formData.get("technicians_csv") as string) || "";
+
+  if (!companyName) return { error: "Company name is required." };
+
   const managerName = (formData.get("manager_name") as string)?.trim();
   const managerEmail = (formData.get("manager_email") as string)?.trim().toLowerCase();
   const managerPhone = (formData.get("manager_phone") as string)?.trim() || null;
-  const techniciansCsv = (formData.get("technicians_csv") as string) || "";
 
-  if (!companyName || !managerName || !managerEmail) {
-    return { error: "Company name, manager name, and manager email are required." };
+  if (!isEdit && (!managerName || !managerEmail)) {
+    return { error: "Manager name and email are required." };
   }
 
   try {
     const company = await upsertCompany(companyName, companyId || undefined, { industry, size });
 
-    const manager = await upsertManager(
-      company.id,
-      { name: managerName, email: managerEmail, phone: managerPhone },
-      managerId || undefined,
-    );
+    if (!isEdit) {
+      await upsertManager(company.id, { name: managerName!, email: managerEmail!, phone: managerPhone });
+    }
 
     const technicians = parseCsv(techniciansCsv);
     await replaceTechnicians(company.id, technicians);
 
-    // Sync to Express so SMS handler has up-to-date employee data
-    const { data: techRows } = await fetchTechsForSync(company.id, technicians, manager);
-    await syncCompanyToExpress(company.id, [manager], techRows);
+    // Re-fetch to get all current managers (including any added previously on edit)
+    const companies = await getCompanies();
+    const companyData = companies.find(c => c.id === company.id);
+    await syncCompanyToExpress(company.id, companyData?.managers ?? [], companyData?.technicians ?? []);
 
     revalidatePath("/dashboard");
     revalidatePath("/dashboard/companies");
@@ -64,16 +66,41 @@ export async function saveCompany(formData: FormData): Promise<{ error?: string 
   }
 }
 
-async function fetchTechsForSync(
-  companyId: string,
-  techRows: { name: string; email: string | null; title: string | null }[],
-  manager: Awaited<ReturnType<typeof upsertManager>>,
-) {
-  // Build synthetic technician objects for the sync (they won't have IDs from Supabase
-  // since we just replaced them — re-fetch from Supabase)
-  const companies = await getCompanies();
-  const company = companies.find(c => c.id === companyId);
-  return { data: company?.technicians ?? [] };
+export async function addManager(formData: FormData): Promise<{ error?: string }> {
+  const companyId = formData.get("company_id") as string;
+  const name = (formData.get("manager_name") as string)?.trim();
+  const email = (formData.get("manager_email") as string)?.trim().toLowerCase();
+  const phone = (formData.get("manager_phone") as string)?.trim() || null;
+
+  if (!companyId || !name || !email) {
+    return { error: "Name and email are required." };
+  }
+
+  try {
+    await upsertManager(companyId, { name, email, phone });
+    const companies = await getCompanies();
+    const companyData = companies.find(c => c.id === companyId);
+    await syncCompanyToExpress(companyId, companyData?.managers ?? [], companyData?.technicians ?? []);
+    revalidatePath("/dashboard/companies");
+    revalidatePath("/dashboard/managers");
+    return {};
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Unknown error" };
+  }
+}
+
+export async function removeManager(managerId: string, companyId: string): Promise<{ error?: string }> {
+  try {
+    await softDeleteManager(managerId);
+    const companies = await getCompanies();
+    const companyData = companies.find(c => c.id === companyId);
+    await syncCompanyToExpress(companyId, companyData?.managers ?? [], companyData?.technicians ?? []);
+    revalidatePath("/dashboard/companies");
+    revalidatePath("/dashboard/managers");
+    return {};
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Unknown error" };
+  }
 }
 
 export async function syncAllCompanies(): Promise<{ error?: string; synced?: number }> {
