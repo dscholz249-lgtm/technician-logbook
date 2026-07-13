@@ -2,6 +2,7 @@ import { getCompanies } from "@/lib/supabase/db";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "@/components/ui/table";
 import { InviteButton } from "./invite-button";
+import { AddManagerModal } from "./add-manager-modal";
 
 export const dynamic = "force-dynamic";
 
@@ -10,14 +11,18 @@ export default async function ManagersPage() {
   const managers = companies.flatMap(c =>
     c.managers.map(m => ({ ...m, companyName: c.name }))
   );
+  const companyOptions = companies.map(c => ({ id: c.id, name: c.name }));
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-semibold">Field Managers</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">
-          All managers who can sign in and send SMS updates.
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-xl font-semibold">Field Managers</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            All managers who can sign in and send SMS updates.
+          </p>
+        </div>
+        <AddManagerModal companies={companyOptions} />
       </div>
 
       {managers.length === 0 ? (

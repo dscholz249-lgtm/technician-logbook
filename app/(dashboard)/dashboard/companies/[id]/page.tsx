@@ -4,6 +4,7 @@ import { ArrowLeftIcon } from "lucide-react";
 import { getCompanies } from "@/lib/supabase/db";
 import { getAnalytics } from "@/lib/api";
 import { CompanyCharts } from "./company-charts";
+import { CompanyInfoSection, ManagersSection, TechniciansSection } from "./company-detail-client";
 
 export const dynamic = "force-dynamic";
 
@@ -93,82 +94,9 @@ export default async function CompanyDetailPage({
       {/* Charts */}
       <CompanyCharts data={analytics} />
 
-      {/* Company info */}
-      <section className="space-y-3">
-        <h2 className="text-sm font-semibold">Company info</h2>
-        <div className="rounded-xl border border-border bg-card px-5 py-4 grid grid-cols-3 gap-4">
-          <div>
-            <p className="text-xs text-muted-foreground mb-0.5">Industry</p>
-            <p className="text-sm">{company.industry ?? <span className="text-muted-foreground">—</span>}</p>
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground mb-0.5">Size</p>
-            <p className="text-sm">{company.size ?? <span className="text-muted-foreground">—</span>}</p>
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground mb-0.5">Technicians on file</p>
-            <p className="text-sm">{company.technicians.length}</p>
-          </div>
-        </div>
-      </section>
-
-      {/* Manager */}
-      <section className="space-y-3">
-        <h2 className="text-sm font-semibold">
-          {company.managers.length === 1 ? "Manager" : `Managers (${company.managers.length})`}
-        </h2>
-        {company.managers.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No manager assigned.</p>
-        ) : (
-          <div className="rounded-xl border border-border bg-card divide-y divide-border">
-            {company.managers.map(m => (
-              <div key={m.id} className="px-5 py-4 grid grid-cols-3 gap-4">
-                <div>
-                  <p className="text-xs text-muted-foreground mb-0.5">Name</p>
-                  <p className="text-sm font-medium">{m.name}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground mb-0.5">Email</p>
-                  <p className="text-sm">{m.email}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground mb-0.5">Phone</p>
-                  <p className="text-sm font-mono">{m.phone ?? <span className="text-muted-foreground not-italic">Not set</span>}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
-
-      {/* Technicians */}
-      <section className="space-y-3">
-        <h2 className="text-sm font-semibold">Technicians ({company.technicians.length})</h2>
-        {company.technicians.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No technicians on file.</p>
-        ) : (
-          <div className="rounded-xl border border-border overflow-hidden">
-            <table className="w-full text-sm">
-              <thead className="border-b border-border">
-                <tr>
-                  <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground">Name</th>
-                  <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground">Email</th>
-                  <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground">Title</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {company.technicians.map(t => (
-                  <tr key={t.id} className="bg-card hover:bg-muted/30">
-                    <td className="px-4 py-2.5 font-medium">{t.name}</td>
-                    <td className="px-4 py-2.5 text-muted-foreground">{t.email ?? "—"}</td>
-                    <td className="px-4 py-2.5 text-muted-foreground">{t.title ?? "—"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
+      <CompanyInfoSection company={company} />
+      <ManagersSection company={company} />
+      <TechniciansSection company={company} />
     </div>
   );
 }

@@ -169,3 +169,17 @@ export async function replaceTechnicians(
     .insert(rows.map(r => ({ company_id: companyId, ...r })));
   if (error) throw error;
 }
+
+export async function addTechnician(
+  companyId: string,
+  row: { name: string; email?: string | null; title?: string | null },
+): Promise<Technician> {
+  const db = createAdminClient();
+  const { data, error } = await db
+    .from("technicians")
+    .insert({ company_id: companyId, ...row })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}

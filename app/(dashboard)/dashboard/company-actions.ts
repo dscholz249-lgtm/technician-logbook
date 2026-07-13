@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import {
-  upsertCompany, upsertManager, replaceTechnicians,
+  upsertCompany, upsertManager, replaceTechnicians, addTechnician,
   deleteCompany, getCompanies, softDeleteManager,
 } from "@/lib/supabase/db";
 import { syncCompanyToExpress } from "@/lib/sync";
@@ -109,6 +109,37 @@ export async function syncAllCompanies(): Promise<{ error?: string; synced?: num
     await Promise.all(companies.map(c => syncCompanyToExpress(c.id, c.managers, c.technicians)));
     revalidatePath("/dashboard");
     return { synced: companies.length };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Unknown error" };
+  }
+}
+
+export async function updateCompanyInfo(formData: FormData): Promise<{ error?: string }> {
+  const companyId = formData.get("company_id") as string;
+  const name = (formData.get("company_name") as string)?.trim();
+  const industry = (formData.get("industry") as string)?.trim() || null;
+  const size = (formData.get("size") as string)?.trim() || null;
+  if (!companyId || !name) return { error: "Company name is required." };
+  try {
+    await upsertCompany(name, companyId, { industry, size });
+    revalidatePath(`/dashboard/companies/${companyId}`);
+    revalidatePath("/dashboard/companies");
+    return {};
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Unknown error" };
+  }
+}
+
+export async function addTechnicianToCompany(formData: FormData): Promise<{ error?: string }> {
+  const companyId = formData.get("company_id") as string;
+  const name = (formData.get("technician_name") as string)?.trim();
+  const email = (formData.get("technician_email") as string)?.trim() || null;
+  const title = (formData.get("technician_title") as string)?.trim() || null;
+  if (!companyId || !name) return { error: "Technician name is required." };
+  try {
+    await addTechnician(companyId, { name, email, title });
+    revalidatePath(`/dashboard/companies/${companyId}`);
+    return {};
   } catch (err) {
     return { error: err instanceof Error ? err.message : "Unknown error" };
   }
