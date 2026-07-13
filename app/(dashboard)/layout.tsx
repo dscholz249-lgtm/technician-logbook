@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Nav } from "./dashboard/nav";
@@ -17,7 +18,9 @@ export default async function DashboardLayout({
       {/* Sidebar */}
       <aside className="w-52 shrink-0 border-r border-border bg-card flex flex-col">
         <div className="px-4 py-4 border-b border-border flex items-center">
-          <img src="/images/skillcat-labs-logo.png" alt="SkillCat Labs" className="h-7 w-auto" />
+          <Link href="/dashboard">
+            <img src="/images/skillcat-labs-logo.png" alt="SkillCat Labs" className="h-7 w-auto" />
+          </Link>
         </div>
         <div className="flex-1 overflow-y-auto px-2">
           <Nav />

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getManagerByEmail } from "@/lib/supabase/db";
@@ -23,7 +24,9 @@ export default async function ManagerLayout({
     <div className="min-h-screen flex flex-col">
       <header className="border-b border-border bg-card px-6 py-3 flex items-center justify-between">
         <div className="flex items-center">
-          <img src="/images/skillcat-labs-logo.png" alt="SkillCat Labs" className="h-7 w-auto" />
+          <Link href="/manager">
+            <img src="/images/skillcat-labs-logo.png" alt="SkillCat Labs" className="h-7 w-auto" />
+          </Link>
         </div>
         <div className="flex items-center gap-3">
           <span className="text-xs text-muted-foreground hidden sm:block">
