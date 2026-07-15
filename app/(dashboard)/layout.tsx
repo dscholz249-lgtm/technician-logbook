@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { env } from "@/lib/env";
 import { Nav } from "./dashboard/nav";
 
 export default async function DashboardLayout({
@@ -12,6 +13,9 @@ export default async function DashboardLayout({
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) redirect("/auth/sign-in");
+  if (!user.email || !env.ADMIN_EMAILS.includes(user.email.toLowerCase())) {
+    redirect("/manager");
+  }
 
   return (
     <div className="min-h-screen flex">
