@@ -306,11 +306,17 @@ export function TestUsersTab({ companies }: { companies: CompanyWithRelations[] 
                     {c.managers.length === 0 ? (
                       <span className="text-muted-foreground text-xs">—</span>
                     ) : (
-                      <div className="space-y-0.5">
-                        {c.managers.map(m => (
-                          <div key={m.id} className="text-xs">
+                      <div className="space-y-1">
+                        {[...c.managers].sort((a, b) => (a.role === "director" ? -1 : 1) - (b.role === "director" ? -1 : 1)).map(m => (
+                          <div key={m.id} className="flex items-center gap-1.5 text-xs">
+                            <Badge
+                              variant={m.role === "director" ? "default" : "outline"}
+                              className="text-[9px] px-1 py-0 leading-4 capitalize shrink-0"
+                            >
+                              {m.role}
+                            </Badge>
                             <span className="font-medium">{m.name}</span>
-                            <span className="text-muted-foreground ml-1">{m.email}</span>
+                            <span className="text-muted-foreground">{m.email}</span>
                           </div>
                         ))}
                       </div>
