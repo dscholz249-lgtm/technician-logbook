@@ -7,6 +7,12 @@ import {
   upsertCompany, upsertManager, replaceTechnicians, addTechnician,
   deleteCompany, getCompanies, softDeleteManager,
 } from "@/lib/supabase/db";
+
+function errMsg(err: unknown): string {
+  if (err instanceof Error) return err.message;
+  if (err && typeof err === "object" && "message" in err) return String((err as { message: unknown }).message);
+  return "Unknown error";
+}
 import { syncCompanyToExpress } from "@/lib/sync";
 
 async function requireAdmin(): Promise<void> {
@@ -72,7 +78,7 @@ export async function saveCompany(formData: FormData): Promise<{ error?: string 
     revalidatePath("/dashboard/managers");
     return {};
   } catch (err) {
-    const msg = err instanceof Error ? err.message : "Unknown error";
+    const msg = errMsg(err);
     return { error: msg };
   }
 }
@@ -99,7 +105,7 @@ export async function addManager(formData: FormData): Promise<{ error?: string }
     revalidatePath("/dashboard/managers");
     return {};
   } catch (err) {
-    return { error: err instanceof Error ? err.message : "Unknown error" };
+    return { error: errMsg(err) };
   }
 }
 
@@ -114,7 +120,7 @@ export async function removeManager(managerId: string, companyId: string): Promi
     revalidatePath("/dashboard/managers");
     return {};
   } catch (err) {
-    return { error: err instanceof Error ? err.message : "Unknown error" };
+    return { error: errMsg(err) };
   }
 }
 
@@ -126,7 +132,7 @@ export async function syncAllCompanies(): Promise<{ error?: string; synced?: num
     revalidatePath("/dashboard");
     return { synced: companies.length };
   } catch (err) {
-    return { error: err instanceof Error ? err.message : "Unknown error" };
+    return { error: errMsg(err) };
   }
 }
 
@@ -143,7 +149,7 @@ export async function updateCompanyInfo(formData: FormData): Promise<{ error?: s
     revalidatePath("/dashboard/companies");
     return {};
   } catch (err) {
-    return { error: err instanceof Error ? err.message : "Unknown error" };
+    return { error: errMsg(err) };
   }
 }
 
@@ -159,7 +165,34 @@ export async function addTechnicianToCompany(formData: FormData): Promise<{ erro
     revalidatePath(`/dashboard/companies/${companyId}`);
     return {};
   } catch (err) {
-    return { error: err instanceof Error ? err.message : "Unknown error" };
+    return { error: errMsg(err) };
+  }
+}
+
+export async function updateUser(formData: FormData): Promise<{ error?: string }> {
+  await requireAdmin();
+  const managerId = formData.get("manager_id") as string;
+  const companyId = formData.get("company_id") as string;
+  const name = (formData.get("manager_name") as string)?.trim();
+  const email = (formData.get("manager_email") as string)?.trim().toLowerCase();
+  const phone = (formData.get("manager_phone") as string)?.trim() || null;
+  const roleRaw = (formData.get("manager_role") as string) || "manager";
+  const role = roleRaw === "director" ? "director" as const : "manager" as const;
+
+  if (!managerId || !name || !email) {
+    return { error: "Name and email are required." };
+  }
+
+  try {
+    await upsertManager(companyId, { name, email, phone, role }, managerId);
+    const companies = await getCompanies();
+    const companyData = companies.find(c => c.id === companyId);
+    await syncCompanyToExpress(companyId, companyData?.managers ?? [], companyData?.technicians ?? []);
+    revalidatePath("/dashboard/companies");
+    revalidatePath("/dashboard/managers");
+    return {};
+  } catch (err) {
+    return { error: errMsg(err) };
   }
 }
 
@@ -170,6 +203,6 @@ export async function removeCompany(companyId: string): Promise<{ error?: string
     revalidatePath("/dashboard");
     return {};
   } catch (err) {
-    return { error: err instanceof Error ? err.message : "Unknown error" };
+    return { error: errMsg(err) };
   }
 }

@@ -1,13 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "@/components/ui/table";
 import { InviteButton } from "./invite-button";
+import { updateUser } from "../company-actions";
+import { PencilIcon } from "lucide-react";
 import type { ManagerRole } from "@/lib/supabase/db";
 
 interface UserRow {
   id: string;
+  company_id: string;
   name: string;
   email: string;
   phone: string | null;
@@ -18,6 +26,78 @@ interface UserRow {
 
 interface Company { id: string; name: string }
 
+// ----------------------------------------------------------------- Edit modal
+
+function EditUserModal({
+  user,
+  open,
+  onClose,
+}: {
+  user: UserRow;
+  open: boolean;
+  onClose: () => void;
+}) {
+  const [pending, startTransition] = useTransition();
+
+  function handleSubmit(e: { preventDefault(): void; currentTarget: HTMLFormElement }) {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
+    startTransition(async () => {
+      const result = await updateUser(fd);
+      if (result.error) toast.error(result.error);
+      else { toast.success("User updated."); onClose(); }
+    });
+  }
+
+  const selectClass =
+    "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring";
+
+  return (
+    <Dialog open={open} onOpenChange={o => !o && onClose()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Edit user</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <input type="hidden" name="manager_id" value={user.id} />
+          <input type="hidden" name="company_id" value={user.company_id} />
+          <div className="space-y-1">
+            <p className="text-xs text-muted-foreground">Company: <span className="text-foreground font-medium">{user.companyName}</span></p>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="eu_name">Name</Label>
+              <Input id="eu_name" name="manager_name" defaultValue={user.name} required />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="eu_email">Email</Label>
+              <Input id="eu_email" name="manager_email" type="email" defaultValue={user.email} required />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="eu_phone">Phone <span className="text-muted-foreground text-xs">(optional)</span></Label>
+              <Input id="eu_phone" name="manager_phone" type="tel" defaultValue={user.phone ?? ""} placeholder="+1 555 000 0000" />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="eu_role">Role</Label>
+              <select id="eu_role" name="manager_role" defaultValue={user.role} className={selectClass}>
+                <option value="manager">Manager</option>
+                <option value="director">Director</option>
+              </select>
+            </div>
+          </div>
+          <DialogFooter showCloseButton>
+            <Button type="submit" disabled={pending}>{pending ? "Saving…" : "Save changes"}</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ----------------------------------------------------------------- Table
+
 export function UsersTable({
   users,
   companies,
@@ -27,6 +107,7 @@ export function UsersTable({
 }) {
   const [companyFilter, setCompanyFilter] = useState("");
   const [roleFilter, setRoleFilter] = useState<"" | "manager" | "director">("");
+  const [editing, setEditing] = useState<UserRow | null>(null);
 
   const filtered = users.filter(u => {
     if (companyFilter && u.companyName !== companyFilter) return false;
@@ -89,7 +170,7 @@ export function UsersTable({
             </TableHeader>
             <TableBody>
               {filtered.map(u => (
-                <TableRow key={u.id}>
+                <TableRow key={u.id} className="group">
                   <TableCell className="font-medium">{u.name}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">{u.companyName}</TableCell>
                   <TableCell>
@@ -117,13 +198,31 @@ export function UsersTable({
                     </span>
                   </TableCell>
                   <TableCell className="text-right">
-                    <InviteButton managerId={u.id} />
+                    <div className="flex items-center justify-end gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => setEditing(u)}
+                      >
+                        <PencilIcon />
+                      </Button>
+                      <InviteButton managerId={u.id} />
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         </div>
+      )}
+
+      {editing && (
+        <EditUserModal
+          user={editing}
+          open={true}
+          onClose={() => setEditing(null)}
+        />
       )}
     </div>
   );
