@@ -8,6 +8,7 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
     ...init,
     headers: {
       "Content-Type": "application/json",
+      "Authorization": `Bearer ${env.EXPRESS_API_SECRET}`,
       ...init?.headers,
     },
     // Don't cache — dashboard data must be fresh on every load.

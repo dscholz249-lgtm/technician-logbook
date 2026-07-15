@@ -1,11 +1,21 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { createClient } from "@/lib/supabase/server";
+import { env } from "@/lib/env";
 import {
   upsertCompany, upsertManager, replaceTechnicians, addTechnician,
   deleteCompany, getCompanies, softDeleteManager,
 } from "@/lib/supabase/db";
 import { syncCompanyToExpress } from "@/lib/sync";
+
+async function requireAdmin(): Promise<void> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user?.email || !env.ADMIN_EMAILS.includes(user.email.toLowerCase())) {
+    throw new Error("Unauthorized");
+  }
+}
 
 function parseCsv(raw: string): { name: string; email: string | null; title: string | null }[] {
   return raw
@@ -24,6 +34,7 @@ function parseCsv(raw: string): { name: string; email: string | null; title: str
 }
 
 export async function saveCompany(formData: FormData): Promise<{ error?: string }> {
+  await requireAdmin();
   const companyId = formData.get("company_id") as string | null;
   const isEdit = !!companyId;
   const companyName = (formData.get("company_name") as string)?.trim();
@@ -67,6 +78,7 @@ export async function saveCompany(formData: FormData): Promise<{ error?: string 
 }
 
 export async function addManager(formData: FormData): Promise<{ error?: string }> {
+  await requireAdmin();
   const companyId = formData.get("company_id") as string;
   const name = (formData.get("manager_name") as string)?.trim();
   const email = (formData.get("manager_email") as string)?.trim().toLowerCase();
@@ -90,6 +102,7 @@ export async function addManager(formData: FormData): Promise<{ error?: string }
 }
 
 export async function removeManager(managerId: string, companyId: string): Promise<{ error?: string }> {
+  await requireAdmin();
   try {
     await softDeleteManager(managerId);
     const companies = await getCompanies();
@@ -104,6 +117,7 @@ export async function removeManager(managerId: string, companyId: string): Promi
 }
 
 export async function syncAllCompanies(): Promise<{ error?: string; synced?: number }> {
+  await requireAdmin();
   try {
     const companies = await getCompanies();
     await Promise.all(companies.map(c => syncCompanyToExpress(c.id, c.managers, c.technicians)));
@@ -115,6 +129,7 @@ export async function syncAllCompanies(): Promise<{ error?: string; synced?: num
 }
 
 export async function updateCompanyInfo(formData: FormData): Promise<{ error?: string }> {
+  await requireAdmin();
   const companyId = formData.get("company_id") as string;
   const name = (formData.get("company_name") as string)?.trim();
   const industry = (formData.get("industry") as string)?.trim() || null;
@@ -131,6 +146,7 @@ export async function updateCompanyInfo(formData: FormData): Promise<{ error?: s
 }
 
 export async function addTechnicianToCompany(formData: FormData): Promise<{ error?: string }> {
+  await requireAdmin();
   const companyId = formData.get("company_id") as string;
   const name = (formData.get("technician_name") as string)?.trim();
   const email = (formData.get("technician_email") as string)?.trim() || null;
@@ -146,6 +162,7 @@ export async function addTechnicianToCompany(formData: FormData): Promise<{ erro
 }
 
 export async function removeCompany(companyId: string): Promise<{ error?: string }> {
+  await requireAdmin();
   try {
     await deleteCompany(companyId);
     revalidatePath("/dashboard");

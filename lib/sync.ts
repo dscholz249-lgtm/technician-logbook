@@ -31,7 +31,10 @@ export async function syncCompanyToExpress(
   const url = `${env.EXPRESS_API_URL}/api/snapshot/ingest`;
   await fetch(url, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${env.EXPRESS_API_SECRET}`,
+    },
     body: JSON.stringify({ employees }),
     cache: "no-store",
   });

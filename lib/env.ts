@@ -15,6 +15,10 @@ export const env = {
   get EXPRESS_API_URL() {
     return required("EXPRESS_API_URL");
   },
+  // Shared secret for Express API authentication. Required in production.
+  get EXPRESS_API_SECRET() {
+    return required("EXPRESS_API_SECRET");
+  },
   // Comma-separated list of emails allowed to access the admin dashboard.
   get ADMIN_EMAILS(): string[] {
     const raw = process.env.ADMIN_EMAILS || "";

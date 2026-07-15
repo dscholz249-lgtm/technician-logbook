@@ -7,11 +7,12 @@ import { syncCompanyToExpress } from "@/lib/sync";
 // Also callable from the admin "Sync roster" button via syncAllCompanies().
 export async function POST(req: NextRequest) {
   const secret = process.env.SYNC_SECRET;
-  if (secret) {
-    const auth = req.headers.get("authorization");
-    if (auth !== `Bearer ${secret}`) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  if (!secret) {
+    return NextResponse.json({ error: "SYNC_SECRET is not configured" }, { status: 503 });
+  }
+  const auth = req.headers.get("authorization");
+  if (auth !== `Bearer ${secret}`) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {

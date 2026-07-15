@@ -2,15 +2,25 @@
 
 import { revalidatePath } from "next/cache";
 import { Resend } from "resend";
+import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getCompanies } from "@/lib/supabase/db";
 import { env } from "@/lib/env";
 import { buildInviteEmail } from "@/lib/email/invite";
 import { capture } from "@/lib/analytics";
 
+async function requireAdmin(): Promise<void> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user?.email || !env.ADMIN_EMAILS.includes(user.email.toLowerCase())) {
+    throw new Error("Unauthorized");
+  }
+}
+
 export async function sendManagerInvite(
   managerId: string,
 ): Promise<{ error?: string; sent?: boolean }> {
+  await requireAdmin();
   const resendKey = env.RESEND_API_KEY;
   if (!resendKey) return { error: "RESEND_API_KEY is not configured." };
 
