@@ -10,7 +10,6 @@ export async function notifySlack(blocks: object[]): Promise<void> {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ blocks }),
       cache: "no-store",
-      // @ts-expect-error — AbortSignal.timeout available at runtime
       signal: AbortSignal.timeout(5000),
     });
   } catch (e) {
