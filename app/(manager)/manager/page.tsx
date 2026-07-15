@@ -6,6 +6,7 @@ import { getQueue, getLogbook } from "@/lib/api";
 import { PhoneForm } from "./phone-form";
 import { ReminderForm } from "./reminder-form";
 import { TechLog } from "./tech-log";
+import { DirectorAddManager } from "./director-add-manager";
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "@/components/ui/table";
 import type { QueueItem, LogbookEntry } from "@/lib/types";
 import type { Technician } from "@/lib/supabase/db";
@@ -117,12 +118,17 @@ export default async function ManagerPage() {
   const manager = await getManagerByEmail(user!.email!);
   if (!manager) return null;
 
+  const isDirector = manager.role === "director";
+
   const companies = await getCompanies().catch(() => []);
   const company = companies.find(c => c.id === manager.company_id);
 
+  // Directors see all company activity; managers see only their own.
+  const phoneFilter = isDirector ? undefined : (manager.phone ?? undefined);
+
   const [queue, logbook] = await Promise.all([
-    getQueue(undefined, manager.company_id).catch(() => [] as QueueItem[]),
-    getLogbook(manager.company_id).catch(() => [] as LogbookEntry[]),
+    getQueue(undefined, manager.company_id, phoneFilter).catch(() => [] as QueueItem[]),
+    getLogbook(manager.company_id, phoneFilter).catch(() => [] as LogbookEntry[]),
   ]);
 
   const techGroups = buildTechGroups(queue, logbook);
@@ -131,76 +137,85 @@ export default async function ManagerPage() {
 
   return (
     <div className="space-y-6">
-        {/* Company + manager info */}
+      {/* Company + manager info */}
+      <div className="flex items-start justify-between">
         <div>
           <h1 className="text-xl font-semibold">{company?.name ?? "Your Company"}</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">{manager.name} · Read-only view</p>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            {manager.name}
+            <span className="ml-1.5 text-xs bg-muted px-1.5 py-0.5 rounded capitalize">{manager.role}</span>
+            · Read-only view
+          </p>
         </div>
+        {isDirector && <DirectorAddManager />}
+      </div>
 
-        {/* SMS features + settings */}
-        <div className="grid grid-cols-2 gap-4 items-start">
-          {/* Left: how it works */}
-          <div className="rounded-xl border border-border bg-card px-5 py-4 space-y-4">
-            <div>
-              <p className="text-sm font-semibold">Send updates by text</p>
-              <p className="text-sm text-muted-foreground mt-0.5">
-                Text <span className="font-mono font-medium text-foreground">{SKILLCAT_SMS_NUMBER}</span>
-              </p>
-            </div>
-            <div className="space-y-3">
-              {[
-                {
-                  n: "01",
-                  title: "Lookup and assign courses",
-                  body: "Just let us know who you want to assign and which course. Don't know which course? Just ask.",
-                },
-                {
-                  n: "02",
-                  title: "Add new technicians",
-                  body: "Tell us the new tech's name and email and we'll add them to your roster.",
-                },
-                {
-                  n: "03",
-                  title: "Leave a note",
-                  body: "Flag anything about a technician and we'll save it to their record in your dashboard.",
-                },
-              ].map(f => (
-                <div key={f.n} className="flex gap-3">
-                  <span className="text-xs font-bold text-skillcat-orange mt-0.5 shrink-0 w-5">{f.n}</span>
-                  <div>
-                    <p className="text-xs font-semibold text-foreground">{f.title}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{f.body}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+      {/* SMS features + settings */}
+      <div className="grid grid-cols-2 gap-4 items-start">
+        {/* Left: how it works */}
+        <div className="rounded-xl border border-border bg-card px-5 py-4 space-y-4">
+          <div>
+            <p className="text-sm font-semibold">Send updates by text</p>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              Text <span className="font-mono font-medium text-foreground">{SKILLCAT_SMS_NUMBER}</span>
+            </p>
           </div>
-
-          {/* Right: phone + reminders */}
           <div className="space-y-3">
-            <div className="rounded-xl border border-border bg-card px-4 py-3">
-              <PhoneForm currentPhone={manager.phone} />
-            </div>
-            <div className="rounded-xl border border-border bg-card px-4 py-3">
-              <ReminderForm current={manager.reminder_preference ?? "never"} />
-            </div>
+            {[
+              {
+                n: "01",
+                title: "Lookup and assign courses",
+                body: "Just let us know who you want to assign and which course. Don't know which course? Just ask.",
+              },
+              {
+                n: "02",
+                title: "Add new technicians",
+                body: "Tell us the new tech's name and email and we'll add them to your roster.",
+              },
+              {
+                n: "03",
+                title: "Leave a note",
+                body: "Flag anything about a technician and we'll save it to their record in your dashboard.",
+              },
+            ].map(f => (
+              <div key={f.n} className="flex gap-3">
+                <span className="text-xs font-bold text-skillcat-orange mt-0.5 shrink-0 w-5">{f.n}</span>
+                <div>
+                  <p className="text-xs font-semibold text-foreground">{f.title}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{f.body}</p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Today's logs */}
-        <div>
-          <div className="flex items-center gap-2 mb-3">
-            <h2 className="text-sm font-semibold">Today's Logs</h2>
-            <span className="text-xs text-muted-foreground">
-              {totalLogs} {totalLogs === 1 ? "entry" : "entries"} · {techGroups.length} {techGroups.length === 1 ? "technician" : "technicians"}
-            </span>
+        {/* Right: phone + reminders */}
+        <div className="space-y-3">
+          <div className="rounded-xl border border-border bg-card px-4 py-3">
+            <PhoneForm currentPhone={manager.phone} />
           </div>
-          <TechLog groups={techGroups} />
+          <div className="rounded-xl border border-border bg-card px-4 py-3">
+            <ReminderForm current={manager.reminder_preference ?? "never"} />
+          </div>
         </div>
+      </div>
 
-        {/* All technicians */}
-        <TechnicianTable technicians={technicians} />
-        <AutoRefresh intervalMs={20000} />
+      {/* Today's logs */}
+      <div>
+        <div className="flex items-center gap-2 mb-3">
+          <h2 className="text-sm font-semibold">
+            {isDirector ? "Company Logs" : "My Logs"}
+          </h2>
+          <span className="text-xs text-muted-foreground">
+            {totalLogs} {totalLogs === 1 ? "entry" : "entries"} · {techGroups.length} {techGroups.length === 1 ? "technician" : "technicians"}
+          </span>
+        </div>
+        <TechLog groups={techGroups} />
+      </div>
+
+      {/* All technicians */}
+      <TechnicianTable technicians={technicians} />
+      <AutoRefresh intervalMs={20000} />
     </div>
   );
 }

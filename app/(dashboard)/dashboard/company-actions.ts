@@ -83,13 +83,15 @@ export async function addManager(formData: FormData): Promise<{ error?: string }
   const name = (formData.get("manager_name") as string)?.trim();
   const email = (formData.get("manager_email") as string)?.trim().toLowerCase();
   const phone = (formData.get("manager_phone") as string)?.trim() || null;
+  const roleRaw = (formData.get("manager_role") as string) || "manager";
+  const role = roleRaw === "director" ? "director" as const : "manager" as const;
 
   if (!companyId || !name || !email) {
     return { error: "Name and email are required." };
   }
 
   try {
-    await upsertManager(companyId, { name, email, phone });
+    await upsertManager(companyId, { name, email, phone, role });
     const companies = await getCompanies();
     const companyData = companies.find(c => c.id === companyId);
     await syncCompanyToExpress(companyId, companyData?.managers ?? [], companyData?.technicians ?? []);

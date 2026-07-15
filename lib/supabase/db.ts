@@ -11,6 +11,7 @@ export interface Company {
 }
 
 export type ReminderPreference = "never" | "daily" | "weekly";
+export type ManagerRole = "manager" | "director";
 
 export interface Manager {
   id: string;
@@ -18,10 +19,24 @@ export interface Manager {
   name: string;
   email: string;
   phone: string | null;
+  role: ManagerRole;
   reminder_preference: ReminderPreference;
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
+}
+
+export interface UrgentRequest {
+  id: string;
+  company_id: string;
+  manager_id: string;
+  manager_name: string;
+  manager_email: string;
+  company_name: string;
+  message: string;
+  status: "open" | "resolved";
+  created_at: string;
+  resolved_at: string | null;
 }
 
 export interface Technician {
@@ -88,7 +103,7 @@ export async function deleteCompany(id: string): Promise<void> {
 // ----------------------------------------------------------------- managers
 export async function upsertManager(
   companyId: string,
-  data: { name: string; email: string; phone?: string | null },
+  data: { name: string; email: string; phone?: string | null; role?: ManagerRole },
   managerId?: string,
 ): Promise<Manager> {
   const db = createAdminClient();
@@ -167,6 +182,44 @@ export async function replaceTechnicians(
   const { error } = await db
     .from("technicians")
     .insert(rows.map(r => ({ company_id: companyId, ...r })));
+  if (error) throw error;
+}
+
+// ----------------------------------------------------------------- urgent_requests
+export async function getUrgentRequests(): Promise<UrgentRequest[]> {
+  const db = createAdminClient();
+  const { data, error } = await db
+    .from("urgent_requests")
+    .select("*")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function createUrgentRequest(req: {
+  company_id: string;
+  manager_id: string;
+  manager_name: string;
+  manager_email: string;
+  company_name: string;
+  message: string;
+}): Promise<UrgentRequest> {
+  const db = createAdminClient();
+  const { data, error } = await db
+    .from("urgent_requests")
+    .insert(req)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function resolveUrgentRequest(id: string): Promise<void> {
+  const db = createAdminClient();
+  const { error } = await db
+    .from("urgent_requests")
+    .update({ status: "resolved", resolved_at: new Date().toISOString() })
+    .eq("id", id);
   if (error) throw error;
 }
 

@@ -23,16 +23,21 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
 export async function getQueue(
   status?: "pending" | "actioned" | "failed",
   companyId?: string,
+  managerPhone?: string,
 ): Promise<QueueItem[]> {
   const params = new URLSearchParams();
   if (status) params.set("status", status);
   if (companyId) params.set("company_id", companyId);
+  if (managerPhone) params.set("manager_phone", managerPhone);
   const qs = params.size ? `?${params}` : "";
   return apiFetch<QueueItem[]>(`/api/queue${qs}`);
 }
 
-export async function getLogbook(companyId?: string): Promise<LogbookEntry[]> {
-  const qs = companyId ? `?company_id=${companyId}` : "";
+export async function getLogbook(companyId?: string, managerPhone?: string): Promise<LogbookEntry[]> {
+  const params = new URLSearchParams();
+  if (companyId) params.set("company_id", companyId);
+  if (managerPhone) params.set("manager_phone", managerPhone);
+  const qs = params.size ? `?${params}` : "";
   return apiFetch<LogbookEntry[]>(`/api/logbook${qs}`);
 }
 

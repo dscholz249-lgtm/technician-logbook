@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getManagerByEmail } from "@/lib/supabase/db";
+import { RequestHelpButton } from "./manager/request-help-button";
 
 export default async function ManagerLayout({
   children,
@@ -45,6 +46,15 @@ export default async function ManagerLayout({
       <main className="flex-1 px-6 py-6 max-w-6xl mx-auto w-full">
         {children}
       </main>
+      <footer className="border-t border-border bg-card px-6 py-3 flex items-center justify-between">
+        <RequestHelpButton />
+        <p className="text-xs text-muted-foreground">
+          Need to remove a manager? Contact{" "}
+          <a href="mailto:support@tryskillcat.com" className="hover:text-foreground transition-colors underline-offset-2 hover:underline">
+            support@tryskillcat.com
+          </a>
+        </p>
+      </footer>
     </div>
   );
 }

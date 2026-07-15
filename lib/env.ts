@@ -19,6 +19,10 @@ export const env = {
   get EXPRESS_API_SECRET() {
     return required("EXPRESS_API_SECRET");
   },
+  // Slack incoming webhook URL — optional, notifications silently skipped if absent.
+  get SLACK_WEBHOOK_URL(): string | undefined {
+    return process.env.SLACK_WEBHOOK_URL;
+  },
   // Comma-separated list of emails allowed to access the admin dashboard.
   get ADMIN_EMAILS(): string[] {
     const raw = process.env.ADMIN_EMAILS || "";

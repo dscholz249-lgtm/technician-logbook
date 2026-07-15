@@ -63,9 +63,23 @@ export function AddManagerModal({ companies }: { companies: Company[] }) {
                 <Input id="fm_email" name="manager_email" type="email" required />
               </div>
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="fm_phone">Phone <span className="text-muted-foreground text-xs">(optional)</span></Label>
-              <Input id="fm_phone" name="manager_phone" type="tel" placeholder="+1 555 000 0000" />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="fm_phone">Phone <span className="text-muted-foreground text-xs">(optional)</span></Label>
+                <Input id="fm_phone" name="manager_phone" type="tel" placeholder="+1 555 000 0000" />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="fm_role">Role</Label>
+                <select
+                  id="fm_role"
+                  name="manager_role"
+                  defaultValue="manager"
+                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                >
+                  <option value="manager">Manager</option>
+                  <option value="director">Director</option>
+                </select>
+              </div>
             </div>
             <DialogFooter showCloseButton>
               <Button type="submit" disabled={pending}>{pending ? "Adding…" : "Add manager"}</Button>
