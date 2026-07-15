@@ -16,7 +16,7 @@ const NAV = [
     label: "OPERATIONS",
     items: [
       { href: "/dashboard/companies", label: "Companies", icon: BuildingIcon },
-      { href: "/dashboard/managers", label: "Field Managers", icon: UsersIcon },
+      { href: "/dashboard/managers", label: "Users", icon: UsersIcon },
       { href: "/dashboard/analytics", label: "Analytics", icon: BarChart2Icon },
       { href: "/dashboard/urgent-requests", label: "Urgent Requests", icon: SirenIcon },
     ],

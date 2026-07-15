@@ -30,13 +30,13 @@ export function AddManagerModal({ companies }: { companies: Company[] }) {
   return (
     <>
       <Button size="sm" onClick={() => setOpen(true)}>
-        <PlusIcon /> Add manager
+        <PlusIcon /> Add user
       </Button>
 
       <Dialog open={open} onOpenChange={o => !o && setOpen(false)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Add field manager</DialogTitle>
+            <DialogTitle>Add user</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
@@ -82,7 +82,7 @@ export function AddManagerModal({ companies }: { companies: Company[] }) {
               </div>
             </div>
             <DialogFooter showCloseButton>
-              <Button type="submit" disabled={pending}>{pending ? "Adding…" : "Add manager"}</Button>
+              <Button type="submit" disabled={pending}>{pending ? "Adding…" : "Add user"}</Button>
             </DialogFooter>
           </form>
         </DialogContent>
