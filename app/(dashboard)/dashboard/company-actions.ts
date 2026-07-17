@@ -71,7 +71,7 @@ export async function saveCompany(formData: FormData): Promise<{ error?: string 
     // Re-fetch to get all current managers (including any added previously on edit)
     const companies = await getCompanies();
     const companyData = companies.find(c => c.id === company.id);
-    await syncCompanyToExpress(company.id, companyData?.managers ?? [], companyData?.technicians ?? []);
+    await syncCompanyToExpress(company.id, companyData?.name ?? companyName, companyData?.managers ?? [], companyData?.technicians ?? []);
 
     revalidatePath("/dashboard");
     revalidatePath("/dashboard/companies");
@@ -100,7 +100,7 @@ export async function addManager(formData: FormData): Promise<{ error?: string }
     await upsertManager(companyId, { name, email, phone, role });
     const companies = await getCompanies();
     const companyData = companies.find(c => c.id === companyId);
-    await syncCompanyToExpress(companyId, companyData?.managers ?? [], companyData?.technicians ?? []);
+    await syncCompanyToExpress(companyId, companyData?.name ?? "", companyData?.managers ?? [], companyData?.technicians ?? []);
     revalidatePath("/dashboard/companies");
     revalidatePath("/dashboard/managers");
     return {};
@@ -115,7 +115,7 @@ export async function removeManager(managerId: string, companyId: string): Promi
     await softDeleteManager(managerId);
     const companies = await getCompanies();
     const companyData = companies.find(c => c.id === companyId);
-    await syncCompanyToExpress(companyId, companyData?.managers ?? [], companyData?.technicians ?? []);
+    await syncCompanyToExpress(companyId, companyData?.name ?? "", companyData?.managers ?? [], companyData?.technicians ?? []);
     revalidatePath("/dashboard/companies");
     revalidatePath("/dashboard/managers");
     return {};
@@ -128,7 +128,7 @@ export async function syncAllCompanies(): Promise<{ error?: string; synced?: num
   await requireAdmin();
   try {
     const companies = await getCompanies();
-    await Promise.all(companies.map(c => syncCompanyToExpress(c.id, c.managers, c.technicians)));
+    await Promise.all(companies.map(c => syncCompanyToExpress(c.id, c.name, c.managers, c.technicians)));
     revalidatePath("/dashboard");
     return { synced: companies.length };
   } catch (err) {
@@ -187,7 +187,7 @@ export async function updateUser(formData: FormData): Promise<{ error?: string }
     await upsertManager(companyId, { name, email, phone, role }, managerId);
     const companies = await getCompanies();
     const companyData = companies.find(c => c.id === companyId);
-    await syncCompanyToExpress(companyId, companyData?.managers ?? [], companyData?.technicians ?? []);
+    await syncCompanyToExpress(companyId, companyData?.name ?? "", companyData?.managers ?? [], companyData?.technicians ?? []);
     revalidatePath("/dashboard/companies");
     revalidatePath("/dashboard/managers");
     return {};

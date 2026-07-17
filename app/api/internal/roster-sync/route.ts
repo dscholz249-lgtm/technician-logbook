@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
     const companies = await getCompanies();
     await Promise.all(
       companies.map(c =>
-        syncCompanyToExpress(c.id, c.managers, c.technicians).catch(e => {
+        syncCompanyToExpress(c.id, c.name, c.managers, c.technicians).catch(e => {
           console.error(`[roster-sync] company ${c.id} failed:`, e.message);
         }),
       ),

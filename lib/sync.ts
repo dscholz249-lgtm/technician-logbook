@@ -6,6 +6,7 @@ import type { Manager, Technician } from "./supabase/db";
 // so the SMS handler can look up employees by name and map manager phones to company_id.
 export async function syncCompanyToExpress(
   companyId: string,
+  companyName: string,
   managers: Manager[],
   technicians: Technician[],
 ): Promise<void> {
@@ -17,6 +18,7 @@ export async function syncCompanyToExpress(
       email: m.email,
       title: "Manager",
       company_id: companyId,
+      company_name: companyName,
     })),
     ...technicians.map(t => ({
       id: t.id,
@@ -25,6 +27,7 @@ export async function syncCompanyToExpress(
       email: t.email ?? null,
       title: t.title ?? null,
       company_id: companyId,
+      company_name: companyName,
     })),
   ];
 
