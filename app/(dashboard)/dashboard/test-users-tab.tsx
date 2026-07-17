@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
-import { PlusIcon, PencilIcon, Trash2Icon, ArrowRightIcon, UserPlusIcon } from "lucide-react";
+import { PlusIcon, PencilIcon, Trash2Icon, ArrowRightIcon, UserPlusIcon, LinkIcon } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 
 function ManagerRow({ manager, companyId }: { manager: Manager; companyId: string }) {
@@ -224,6 +224,29 @@ function CompanyForm({
   );
 }
 
+function CopyLinkButton({ companyId }: { companyId: string }) {
+  const [copied, setCopied] = useState(false);
+
+  function handleCopy() {
+    const url = `${window.location.origin}/join/${companyId}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
+
+  return (
+    <Button
+      variant="ghost"
+      size="icon-sm"
+      onClick={handleCopy}
+      title={copied ? "Copied!" : "Copy invite link"}
+    >
+      <LinkIcon className={copied ? "text-skillcat-orange" : ""} />
+    </Button>
+  );
+}
+
 function SyncButton() {
   const [pending, startTransition] = useTransition();
   function handleClick() {
@@ -325,6 +348,7 @@ export function TestUsersTab({ companies }: { companies: CompanyWithRelations[] 
                   <TableCell className="text-xs text-muted-foreground">{c.technicians.length}</TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1">
+                      <CopyLinkButton companyId={c.id} />
                       <Button variant="ghost" size="icon-sm" onClick={() => setEditing(c)}>
                         <PencilIcon />
                       </Button>

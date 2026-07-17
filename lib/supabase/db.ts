@@ -54,6 +54,13 @@ export interface CompanyWithRelations extends Company {
 }
 
 // ----------------------------------------------------------------- companies
+export async function getCompanyById(id: string): Promise<Company | null> {
+  const db = createAdminClient();
+  const { data, error } = await db.from("companies").select("*").eq("id", id).maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
 export async function getCompanies(): Promise<CompanyWithRelations[]> {
   const db = createAdminClient();
   const { data: companies, error } = await db.from("companies").select("*").order("name");
