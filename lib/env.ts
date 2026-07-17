@@ -28,6 +28,10 @@ export const env = {
     const raw = process.env.ADMIN_EMAILS || "";
     return raw.split(",").map(e => e.trim().toLowerCase()).filter(Boolean);
   },
+  // E.164 format, e.g. +12513135407 — used for the downloadable contact card.
+  get SKILLCAT_SMS_PHONE(): string | undefined {
+    return process.env.SKILLCAT_SMS_PHONE;
+  },
   get PUBLIC_ORIGIN() {
     const raw =
       process.env.NEXT_PUBLIC_APP_ORIGIN ||

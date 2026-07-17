@@ -7,13 +7,14 @@ import { PhoneForm } from "./phone-form";
 import { ReminderForm } from "./reminder-form";
 import { TechLog } from "./tech-log";
 import { DirectorAddManager } from "./director-add-manager";
+import { ContactCardSection } from "./contact-card-section";
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "@/components/ui/table";
 import type { QueueItem, LogbookEntry } from "@/lib/types";
 import type { Technician } from "@/lib/supabase/db";
 
 export const dynamic = "force-dynamic";
 
-const SKILLCAT_SMS_NUMBER = "(251) 313-5407";
+const SKILLCAT_SMS_NUMBER = process.env.SKILLCAT_SMS_PHONE ?? "(251) 313-5407";
 
 export type LogItem =
   | { kind: "assignment"; data: QueueItem; techName: string }
@@ -187,6 +188,7 @@ export default async function ManagerPage() {
               </div>
             ))}
           </div>
+          {process.env.SKILLCAT_SMS_PHONE && <ContactCardSection />}
         </div>
 
         {/* Right: phone + reminders */}
