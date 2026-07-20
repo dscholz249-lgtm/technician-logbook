@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getManagerByEmail, getCompanies } from "@/lib/supabase/db";
@@ -158,15 +157,14 @@ export default async function TechnicianPage({
                 href={`/api/media?url=${encodeURIComponent(m.media_url)}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group relative aspect-square rounded-lg overflow-hidden border border-border bg-muted"
+                className="group aspect-square rounded-lg overflow-hidden border border-border bg-muted block"
                 title={m.caption ?? formatDate(m.created_at)}
               >
-                <Image
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
                   src={`/api/media?url=${encodeURIComponent(m.media_url)}`}
                   alt={m.caption ?? "Technician upload"}
-                  fill
-                  className="object-cover transition-opacity group-hover:opacity-90"
-                  sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
+                  className="size-full object-cover transition-opacity group-hover:opacity-90"
                 />
               </a>
             ))}
@@ -205,14 +203,13 @@ export default async function TechnicianPage({
                             href={`/api/media?url=${encodeURIComponent(url)}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="block relative size-20 rounded-md overflow-hidden border border-border bg-muted shrink-0"
+                            className="block size-20 rounded-md overflow-hidden border border-border bg-muted shrink-0"
                           >
-                            <Image
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
                               src={`/api/media?url=${encodeURIComponent(url)}`}
                               alt="Technician upload"
-                              fill
-                              className="object-cover hover:opacity-90 transition-opacity"
-                              sizes="80px"
+                              className="size-full object-cover hover:opacity-90 transition-opacity"
                             />
                           </a>
                         ))}
