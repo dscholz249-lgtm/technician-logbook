@@ -92,6 +92,26 @@ export async function getGlobalAnalytics(): Promise<GlobalAnalyticsData> {
   return apiFetch<GlobalAnalyticsData>("/api/analytics/global");
 }
 
+export interface TechnicianMedia {
+  id: number;
+  technician_id: string | null;
+  technician_name: string | null;
+  technician_phone: string;
+  company_id: string | null;
+  media_url: string;
+  media_content_type: string | null;
+  caption: string | null;
+  created_at: number;
+}
+
+export async function getTechnicianMedia(
+  companyId: string,
+  technicianId: string,
+): Promise<TechnicianMedia[]> {
+  const params = new URLSearchParams({ company_id: companyId, technician_id: technicianId });
+  return apiFetch<TechnicianMedia[]>(`/api/technician-media?${params}`);
+}
+
 export async function markActioned(
   id: number,
   actionedBy: string,

@@ -45,6 +45,7 @@ export interface Technician {
   name: string;
   email: string | null;
   title: string | null;
+  phone: string | null;
   created_at: string;
 }
 
@@ -230,9 +231,18 @@ export async function resolveUrgentRequest(id: string): Promise<void> {
   if (error) throw error;
 }
 
+export async function updateTechnician(
+  id: string,
+  row: { name?: string; email?: string | null; title?: string | null; phone?: string | null },
+): Promise<void> {
+  const db = createAdminClient();
+  const { error } = await db.from("technicians").update(row).eq("id", id);
+  if (error) throw error;
+}
+
 export async function addTechnician(
   companyId: string,
-  row: { name: string; email?: string | null; title?: string | null },
+  row: { name: string; email?: string | null; title?: string | null; phone?: string | null },
 ): Promise<Technician> {
   const db = createAdminClient();
   const { data, error } = await db

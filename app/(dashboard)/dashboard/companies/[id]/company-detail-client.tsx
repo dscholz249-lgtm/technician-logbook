@@ -236,6 +236,10 @@ function AddTechnicianModal({
               <Input id="at_title" name="technician_title" placeholder="e.g. HVAC Tech" />
             </div>
           </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="at_phone">Phone <span className="text-muted-foreground text-xs">(optional — for MMS uploads)</span></Label>
+            <Input id="at_phone" name="technician_phone" type="tel" placeholder="+1 555 000 0000" />
+          </div>
           <DialogFooter showCloseButton>
             <Button type="submit" disabled={pending}>{pending ? "Adding…" : "Add technician"}</Button>
           </DialogFooter>

@@ -23,7 +23,7 @@ export async function syncCompanyToExpress(
     ...technicians.map(t => ({
       id: t.id,
       name: t.name,
-      phone: null,
+      phone: t.phone ?? null,
       email: t.email ?? null,
       title: t.title ?? null,
       company_id: companyId,

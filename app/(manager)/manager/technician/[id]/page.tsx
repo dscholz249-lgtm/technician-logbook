@@ -1,8 +1,9 @@
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getManagerByEmail, getCompanies } from "@/lib/supabase/db";
-import { getQueue, getLogbook } from "@/lib/api";
+import { getQueue, getLogbook, getTechnicianMedia } from "@/lib/api";
 import { ChevronLeftIcon, MessageSquareIcon } from "lucide-react";
 import type { QueueItem, LogbookEntry } from "@/lib/types";
 
@@ -58,9 +59,10 @@ export default async function TechnicianPage({
   const technician = company.technicians.find(t => t.id === id);
   if (!technician) return notFound();
 
-  const [queue, logbook] = await Promise.all([
+  const [queue, logbook, media] = await Promise.all([
     getQueue(undefined, manager.company_id).catch(() => [] as QueueItem[]),
     getLogbook(manager.company_id).catch(() => [] as LogbookEntry[]),
+    getTechnicianMedia(manager.company_id, id).catch(() => []),
   ]);
 
   const entries: Entry[] = [];
@@ -124,7 +126,43 @@ export default async function TechnicianPage({
           <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-semibold">Notes</p>
           <p className="text-2xl font-semibold mt-0.5">{noteCount}</p>
         </div>
+        <div className="rounded-xl border border-border bg-card px-4 py-3 min-w-[100px]">
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-semibold">Photos</p>
+          <p className="text-2xl font-semibold mt-0.5">{media.length}</p>
+        </div>
       </div>
+
+      {/* Photos */}
+      {media.length > 0 && (
+        <div>
+          <h2 className="text-sm font-semibold mb-3">
+            Photos
+            <span className="ml-2 text-xs font-normal text-muted-foreground">
+              {media.length} {media.length === 1 ? "upload" : "uploads"}
+            </span>
+          </h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+            {media.map(m => (
+              <a
+                key={m.id}
+                href={`/api/media?url=${encodeURIComponent(m.media_url)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group relative aspect-square rounded-lg overflow-hidden border border-border bg-muted"
+                title={m.caption ?? formatDate(m.created_at)}
+              >
+                <Image
+                  src={`/api/media?url=${encodeURIComponent(m.media_url)}`}
+                  alt={m.caption ?? "Technician upload"}
+                  fill
+                  className="object-cover transition-opacity group-hover:opacity-90"
+                  sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 25vw"
+                />
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Log entries */}
       <div>

@@ -130,11 +130,13 @@ function CompanyForm({
     .map(t => [t.name, t.email ?? "", t.title ?? ""].join(","))
     .join("\n") ?? "";
 
+  const [createMode, setCreateMode] = useState<"manual" | "csv">("manual");
   const [pending, startTransition] = useTransition();
 
   function handleSubmit(e: { preventDefault(): void; currentTarget: HTMLFormElement }) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
+    if (!isEdit) fd.set("create_mode", createMode);
     startTransition(async () => {
       const result = await saveCompany(fd);
       if (result.error) {
@@ -167,53 +169,117 @@ function CompanyForm({
       </div>
 
       {isEdit ? (
-        <div className="space-y-2">
-          <Label>Managers</Label>
-          <div className="rounded-lg border border-border divide-y divide-border">
-            {company.managers.length === 0 ? (
-              <p className="py-3 text-center text-sm text-muted-foreground">No active managers.</p>
-            ) : (
-              company.managers.map(m => (
-                <ManagerRow key={m.id} manager={m} companyId={company.id} />
-              ))
-            )}
-          </div>
-          <AddManagerForm companyId={company.id} onAdded={() => {}} />
-        </div>
-      ) : (
+        /* Edit path: existing managers list + add form + technicians CSV */
         <>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="manager_name">Manager name</Label>
-              <Input id="manager_name" name="manager_name" required />
+          <div className="space-y-2">
+            <Label>Users</Label>
+            <div className="rounded-lg border border-border divide-y divide-border">
+              {company.managers.length === 0 ? (
+                <p className="py-3 text-center text-sm text-muted-foreground">No active users.</p>
+              ) : (
+                company.managers.map(m => (
+                  <ManagerRow key={m.id} manager={m} companyId={company.id} />
+                ))
+              )}
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="manager_email">Manager email</Label>
-              <Input id="manager_email" name="manager_email" type="email" required />
-            </div>
+            <AddManagerForm companyId={company.id} onAdded={() => {}} />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="manager_phone">
-              Manager phone <span className="text-muted-foreground text-xs">(optional)</span>
+            <Label htmlFor="technicians_csv">
+              Technicians <span className="text-muted-foreground text-xs">CSV — Name, Email, Title (one per line)</span>
             </Label>
-            <Input id="manager_phone" name="manager_phone" type="tel" placeholder="+1 555 000 0000" />
+            <Textarea
+              id="technicians_csv"
+              name="technicians_csv"
+              defaultValue={techCsv}
+              placeholder={"John Smith, john@co.com, HVAC Tech\nMike Torres, mike@co.com, Refrigeration Tech"}
+              className="min-h-28 font-mono text-xs"
+            />
+            <p className="text-xs text-muted-foreground">Replaces existing technicians on save.</p>
           </div>
         </>
-      )}
+      ) : (
+        /* Create path: tab toggle between manual and CSV import */
+        <>
+          {/* Tab toggle */}
+          <div className="flex gap-1 p-0.5 rounded-lg bg-muted w-fit">
+            {(["manual", "csv"] as const).map(mode => (
+              <button
+                key={mode}
+                type="button"
+                onClick={() => setCreateMode(mode)}
+                className={[
+                  "px-3 py-1 text-xs font-medium rounded-md transition-colors",
+                  createMode === mode
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground",
+                ].join(" ")}
+              >
+                {mode === "manual" ? "Manual" : "CSV Import"}
+              </button>
+            ))}
+          </div>
 
-      <div className="space-y-1.5">
-        <Label htmlFor="technicians_csv">
-          Technicians <span className="text-muted-foreground text-xs">CSV — Name, Email, Title (one per line)</span>
-        </Label>
-        <Textarea
-          id="technicians_csv"
-          name="technicians_csv"
-          defaultValue={techCsv}
-          placeholder={"John Smith, john@co.com, HVAC Tech\nMike Torres, mike@co.com, Refrigeration Tech"}
-          className="min-h-32 font-mono text-xs"
-        />
-        <p className="text-xs text-muted-foreground">Paste directly from a spreadsheet. Replaces existing technicians on save.</p>
-      </div>
+          {createMode === "manual" ? (
+            <>
+              <div className="space-y-1.5">
+                <Label htmlFor="directors_csv">
+                  Directors <span className="text-muted-foreground text-xs">Name, Email, Phone (one per line)</span>
+                </Label>
+                <Textarea
+                  id="directors_csv"
+                  name="directors_csv"
+                  placeholder={"Jane Smith, jane@co.com, +1 555 000 0001"}
+                  className="min-h-20 font-mono text-xs"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="managers_csv">
+                  Managers <span className="text-muted-foreground text-xs">Name, Email, Phone (one per line)</span>
+                </Label>
+                <Textarea
+                  id="managers_csv"
+                  name="managers_csv"
+                  placeholder={"John Smith, john@co.com, +1 555 000 0000\nMike Torres, mike@co.com"}
+                  className="min-h-20 font-mono text-xs"
+                />
+                <p className="text-xs text-muted-foreground">At least one director or manager is required.</p>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="technicians_csv">
+                  Technicians <span className="text-muted-foreground text-xs">Name, Email, Title (one per line, optional)</span>
+                </Label>
+                <Textarea
+                  id="technicians_csv"
+                  name="technicians_csv"
+                  placeholder={"Alex Rivera, alex@co.com, HVAC Tech\nSam Lee, sam@co.com, Refrigeration Tech"}
+                  className="min-h-20 font-mono text-xs"
+                />
+              </div>
+            </>
+          ) : (
+            <div className="space-y-1.5">
+              <Label htmlFor="people_csv">
+                All people <span className="text-muted-foreground text-xs">Role, Name, Email, Phone/Title (one per line)</span>
+              </Label>
+              <Textarea
+                id="people_csv"
+                name="people_csv"
+                placeholder={[
+                  "director, Jane Smith, jane@co.com, +1 555 000 0001",
+                  "manager, John Smith, john@co.com, +1 555 000 0000",
+                  "technician, Alex Rivera, alex@co.com, HVAC Tech",
+                ].join("\n")}
+                className="min-h-40 font-mono text-xs"
+              />
+              <p className="text-xs text-muted-foreground">
+                Roles: <code className="bg-muted px-0.5 rounded">director</code>, <code className="bg-muted px-0.5 rounded">manager</code>, <code className="bg-muted px-0.5 rounded">technician</code>.
+                {" "}4th column is phone for directors/managers, job title for technicians.
+              </p>
+            </div>
+          )}
+        </>
+      )}
 
       <DialogFooter showCloseButton>
         <Button type="submit" disabled={pending}>

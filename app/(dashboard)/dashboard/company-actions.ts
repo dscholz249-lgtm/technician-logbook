@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { env } from "@/lib/env";
 import {
   upsertCompany, upsertManager, replaceTechnicians, addTechnician,
+  updateTechnician as dbUpdateTechnician,
   deleteCompany, getCompanies, softDeleteManager,
 } from "@/lib/supabase/db";
 
@@ -39,6 +40,47 @@ function parseCsv(raw: string): { name: string; email: string | null; title: str
     .filter(r => r.name);
 }
 
+// Parses "name, email, phone" rows for directors/managers (one per line)
+function parsePersonCsv(raw: string): { name: string; email: string; phone: string | null }[] {
+  return raw
+    .split("\n")
+    .map(line => line.trim())
+    .filter(line => line && !line.toLowerCase().startsWith("name"))
+    .map(line => {
+      const [name, email, phone] = line.split(",").map(f => f.trim());
+      return { name: name || "", email: (email || "").toLowerCase(), phone: phone || null };
+    })
+    .filter(r => r.name && r.email);
+}
+
+// Parses "role, name, email, phone_or_title" rows for the combined CSV import mode
+function parseAllPeopleCsv(raw: string): {
+  role: "director" | "manager" | "technician";
+  name: string;
+  email: string;
+  phone: string | null;
+  title: string | null;
+}[] {
+  return raw
+    .split("\n")
+    .map(line => line.trim())
+    .filter(line => line && !line.toLowerCase().startsWith("role"))
+    .map(line => {
+      const [role, name, email, extra] = line.split(",").map(f => f.trim());
+      const r = role?.toLowerCase();
+      if (r !== "director" && r !== "manager" && r !== "technician") return null;
+      if (!name || !email) return null;
+      return {
+        role: r as "director" | "manager" | "technician",
+        name,
+        email: email.toLowerCase(),
+        phone: r !== "technician" ? (extra || null) : null,
+        title: r === "technician" ? (extra || null) : null,
+      };
+    })
+    .filter((r): r is NonNullable<typeof r> => r !== null);
+}
+
 export async function saveCompany(formData: FormData): Promise<{ error?: string }> {
   await requireAdmin();
   const companyId = formData.get("company_id") as string | null;
@@ -46,29 +88,49 @@ export async function saveCompany(formData: FormData): Promise<{ error?: string 
   const companyName = (formData.get("company_name") as string)?.trim();
   const industry = (formData.get("industry") as string)?.trim() || null;
   const size = (formData.get("size") as string)?.trim() || null;
-  const techniciansCsv = (formData.get("technicians_csv") as string) || "";
 
   if (!companyName) return { error: "Company name is required." };
 
-  const managerName = (formData.get("manager_name") as string)?.trim();
-  const managerEmail = (formData.get("manager_email") as string)?.trim().toLowerCase();
-  const managerPhone = (formData.get("manager_phone") as string)?.trim() || null;
+  // Pre-parse and validate staffing before touching the DB
+  type PersonRow = { name: string; email: string; phone: string | null };
+  let createDirectors: PersonRow[] = [];
+  let createManagers: PersonRow[] = [];
+  let createTechs: { name: string; email: string | null; title: string | null }[] = [];
 
-  if (!isEdit && (!managerName || !managerEmail)) {
-    return { error: "Manager name and email are required." };
+  if (!isEdit) {
+    const createMode = (formData.get("create_mode") as string) || "manual";
+    if (createMode === "csv") {
+      const people = parseAllPeopleCsv((formData.get("people_csv") as string) || "");
+      createDirectors = people.filter(p => p.role === "director").map(p => ({ name: p.name, email: p.email, phone: p.phone }));
+      createManagers = people.filter(p => p.role === "manager").map(p => ({ name: p.name, email: p.email, phone: p.phone }));
+      createTechs = people.filter(p => p.role === "technician").map(p => ({ name: p.name, email: p.email, title: p.title }));
+    } else {
+      createDirectors = parsePersonCsv((formData.get("directors_csv") as string) || "");
+      createManagers = parsePersonCsv((formData.get("managers_csv") as string) || "");
+      createTechs = parseCsv((formData.get("technicians_csv") as string) || "");
+    }
+    if (createDirectors.length === 0 && createManagers.length === 0) {
+      return { error: "At least one director or manager is required." };
+    }
   }
 
   try {
     const company = await upsertCompany(companyName, companyId || undefined, { industry, size });
 
     if (!isEdit) {
-      await upsertManager(company.id, { name: managerName!, email: managerEmail!, phone: managerPhone });
+      for (const d of createDirectors) {
+        await upsertManager(company.id, { name: d.name, email: d.email, phone: d.phone, role: "director" });
+      }
+      for (const m of createManagers) {
+        await upsertManager(company.id, { name: m.name, email: m.email, phone: m.phone, role: "manager" });
+      }
+      await replaceTechnicians(company.id, createTechs);
+    } else {
+      const technicians = parseCsv((formData.get("technicians_csv") as string) || "");
+      await replaceTechnicians(company.id, technicians);
     }
 
-    const technicians = parseCsv(techniciansCsv);
-    await replaceTechnicians(company.id, technicians);
-
-    // Re-fetch to get all current managers (including any added previously on edit)
+    // Re-fetch to get all current managers for sync
     const companies = await getCompanies();
     const companyData = companies.find(c => c.id === company.id);
     await syncCompanyToExpress(company.id, companyData?.name ?? companyName, companyData?.managers ?? [], companyData?.technicians ?? []);
@@ -78,8 +140,7 @@ export async function saveCompany(formData: FormData): Promise<{ error?: string 
     revalidatePath("/dashboard/managers");
     return {};
   } catch (err) {
-    const msg = errMsg(err);
-    return { error: msg };
+    return { error: errMsg(err) };
   }
 }
 
@@ -159,9 +220,10 @@ export async function addTechnicianToCompany(formData: FormData): Promise<{ erro
   const name = (formData.get("technician_name") as string)?.trim();
   const email = (formData.get("technician_email") as string)?.trim() || null;
   const title = (formData.get("technician_title") as string)?.trim() || null;
+  const phone = (formData.get("technician_phone") as string)?.trim() || null;
   if (!companyId || !name) return { error: "Technician name is required." };
   try {
-    await addTechnician(companyId, { name, email, title });
+    await addTechnician(companyId, { name, email, title, phone });
     revalidatePath(`/dashboard/companies/${companyId}`);
     return {};
   } catch (err) {
@@ -185,6 +247,30 @@ export async function updateUser(formData: FormData): Promise<{ error?: string }
 
   try {
     await upsertManager(companyId, { name, email, phone, role }, managerId);
+    const companies = await getCompanies();
+    const companyData = companies.find(c => c.id === companyId);
+    await syncCompanyToExpress(companyId, companyData?.name ?? "", companyData?.managers ?? [], companyData?.technicians ?? []);
+    revalidatePath("/dashboard/companies");
+    revalidatePath("/dashboard/managers");
+    return {};
+  } catch (err) {
+    return { error: errMsg(err) };
+  }
+}
+
+export async function updateTechnician(formData: FormData): Promise<{ error?: string }> {
+  await requireAdmin();
+  const technicianId = formData.get("technician_id") as string;
+  const companyId = formData.get("company_id") as string;
+  const name = (formData.get("technician_name") as string)?.trim();
+  const email = (formData.get("technician_email") as string)?.trim().toLowerCase() || null;
+  const phone = (formData.get("technician_phone") as string)?.trim() || null;
+  const title = (formData.get("technician_title") as string)?.trim() || null;
+
+  if (!technicianId || !name) return { error: "Name is required." };
+
+  try {
+    await dbUpdateTechnician(technicianId, { name, email, phone, title });
     const companies = await getCompanies();
     const companyData = companies.find(c => c.id === companyId);
     await syncCompanyToExpress(companyId, companyData?.name ?? "", companyData?.managers ?? [], companyData?.technicians ?? []);

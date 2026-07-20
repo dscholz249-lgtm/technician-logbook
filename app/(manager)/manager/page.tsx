@@ -145,7 +145,6 @@ export default async function ManagerPage() {
           <p className="text-sm text-muted-foreground mt-0.5">
             {manager.name}
             <span className="ml-1.5 text-xs bg-muted px-1.5 py-0.5 rounded capitalize">{manager.role}</span>
-            · Read-only view
           </p>
         </div>
         {isDirector && <DirectorAddManager />}

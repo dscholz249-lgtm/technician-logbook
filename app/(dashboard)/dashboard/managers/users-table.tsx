@@ -9,31 +9,45 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "@/components/ui/table";
 import { InviteButton } from "./invite-button";
-import { updateUser } from "../company-actions";
+import { updateUser, updateTechnician } from "../company-actions";
 import { PencilIcon } from "lucide-react";
 import type { ManagerRole } from "@/lib/supabase/db";
 
-interface UserRow {
+interface ManagerRow {
+  kind: "manager";
   id: string;
   company_id: string;
   name: string;
   email: string;
   phone: string | null;
-  reminder_preference: string | null;
   role: ManagerRole;
+  reminder_preference: string | null;
   companyName: string;
 }
+
+interface TechnicianRow {
+  kind: "technician";
+  id: string;
+  company_id: string;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  title: string | null;
+  companyName: string;
+}
+
+type AnyUserRow = ManagerRow | TechnicianRow;
 
 interface Company { id: string; name: string }
 
 // ----------------------------------------------------------------- Edit modal
 
-function EditUserModal({
+function EditManagerModal({
   user,
   open,
   onClose,
 }: {
-  user: UserRow;
+  user: ManagerRow;
   open: boolean;
   onClose: () => void;
 }) {
@@ -96,22 +110,98 @@ function EditUserModal({
   );
 }
 
+function EditTechnicianModal({
+  user,
+  open,
+  onClose,
+}: {
+  user: TechnicianRow;
+  open: boolean;
+  onClose: () => void;
+}) {
+  const [pending, startTransition] = useTransition();
+
+  function handleSubmit(e: { preventDefault(): void; currentTarget: HTMLFormElement }) {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
+    startTransition(async () => {
+      const result = await updateTechnician(fd);
+      if (result.error) toast.error(result.error);
+      else { toast.success("Technician updated."); onClose(); }
+    });
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={o => !o && onClose()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Edit technician</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <input type="hidden" name="technician_id" value={user.id} />
+          <input type="hidden" name="company_id" value={user.company_id} />
+          <div className="space-y-1">
+            <p className="text-xs text-muted-foreground">Company: <span className="text-foreground font-medium">{user.companyName}</span></p>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="et_name">Name</Label>
+              <Input id="et_name" name="technician_name" defaultValue={user.name} required />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="et_title">Title <span className="text-muted-foreground text-xs">(optional)</span></Label>
+              <Input id="et_title" name="technician_title" defaultValue={user.title ?? ""} placeholder="e.g. HVAC Tech" />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="et_email">Email <span className="text-muted-foreground text-xs">(optional)</span></Label>
+              <Input id="et_email" name="technician_email" type="email" defaultValue={user.email ?? ""} />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="et_phone">Phone <span className="text-muted-foreground text-xs">(for MMS)</span></Label>
+              <Input id="et_phone" name="technician_phone" type="tel" defaultValue={user.phone ?? ""} placeholder="+1 555 000 0000" />
+            </div>
+          </div>
+          <DialogFooter showCloseButton>
+            <Button type="submit" disabled={pending}>{pending ? "Saving…" : "Save changes"}</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 // ----------------------------------------------------------------- Table
 
 export function UsersTable({
-  users,
+  managers,
+  technicians,
   companies,
 }: {
-  users: UserRow[];
+  managers: ManagerRow[];
+  technicians: TechnicianRow[];
   companies: Company[];
 }) {
   const [companyFilter, setCompanyFilter] = useState("");
-  const [roleFilter, setRoleFilter] = useState<"" | "manager" | "director">("");
-  const [editing, setEditing] = useState<UserRow | null>(null);
+  const [roleFilter, setRoleFilter] = useState<"" | "manager" | "director" | "technician">("");
+  const [editing, setEditing] = useState<AnyUserRow | null>(null);
 
-  const filtered = users.filter(u => {
+  const allUsers: AnyUserRow[] = [
+    ...managers.sort((a, b) =>
+      a.companyName.localeCompare(b.companyName) || (a.role === "director" ? -1 : 1) - (b.role === "director" ? -1 : 1) || a.name.localeCompare(b.name)
+    ),
+    ...technicians.sort((a, b) =>
+      a.companyName.localeCompare(b.companyName) || a.name.localeCompare(b.name)
+    ),
+  ];
+
+  const filtered = allUsers.filter(u => {
     if (companyFilter && u.companyName !== companyFilter) return false;
-    if (roleFilter && u.role !== roleFilter) return false;
+    if (roleFilter) {
+      if (roleFilter === "technician" && u.kind !== "technician") return false;
+      if (roleFilter !== "technician" && (u.kind !== "manager" || u.role !== roleFilter)) return false;
+    }
     return true;
   });
 
@@ -133,12 +223,13 @@ export function UsersTable({
         </select>
         <select
           value={roleFilter}
-          onChange={e => setRoleFilter(e.target.value as "" | "manager" | "director")}
+          onChange={e => setRoleFilter(e.target.value as "" | "manager" | "director" | "technician")}
           className={selectClass}
         >
           <option value="">All roles</option>
           <option value="manager">Manager</option>
           <option value="director">Director</option>
+          <option value="technician">Technician</option>
         </select>
         {(companyFilter || roleFilter) && (
           <button
@@ -170,32 +261,42 @@ export function UsersTable({
             </TableHeader>
             <TableBody>
               {filtered.map(u => (
-                <TableRow key={u.id} className="group">
+                <TableRow key={`${u.kind}-${u.id}`} className="group">
                   <TableCell className="font-medium">{u.name}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">{u.companyName}</TableCell>
                   <TableCell>
-                    <Badge
-                      variant={u.role === "director" ? "default" : "outline"}
-                      className="text-[10px] capitalize"
-                    >
-                      {u.role}
-                    </Badge>
+                    {u.kind === "technician" ? (
+                      <Badge variant="secondary" className="text-[10px] capitalize">
+                        {u.title ?? "Technician"}
+                      </Badge>
+                    ) : (
+                      <Badge
+                        variant={u.role === "director" ? "default" : "outline"}
+                        className="text-[10px] capitalize"
+                      >
+                        {u.role}
+                      </Badge>
+                    )}
                   </TableCell>
-                  <TableCell className="text-xs text-muted-foreground">{u.email}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground">{u.email ?? "—"}</TableCell>
                   <TableCell>
                     {u.phone
                       ? <span className="text-xs font-mono">{u.phone}</span>
                       : <Badge variant="outline" className="text-[10px]">Not set</Badge>}
                   </TableCell>
                   <TableCell>
-                    <span className={[
-                      "text-xs capitalize",
-                      u.reminder_preference === "never" ? "text-muted-foreground" : "text-foreground",
-                    ].join(" ")}>
-                      {u.reminder_preference === "daily" ? "Daily at 5pm"
-                        : u.reminder_preference === "weekly" ? "Fridays at 5pm"
-                        : "Off"}
-                    </span>
+                    {u.kind === "manager" ? (
+                      <span className={[
+                        "text-xs capitalize",
+                        u.reminder_preference === "never" ? "text-muted-foreground" : "text-foreground",
+                      ].join(" ")}>
+                        {u.reminder_preference === "daily" ? "Daily at 5pm"
+                          : u.reminder_preference === "weekly" ? "Fridays at 5pm"
+                          : "Off"}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    )}
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1">
@@ -207,7 +308,7 @@ export function UsersTable({
                       >
                         <PencilIcon />
                       </Button>
-                      <InviteButton managerId={u.id} />
+                      {u.kind === "manager" && <InviteButton managerId={u.id} />}
                     </div>
                   </TableCell>
                 </TableRow>
@@ -217,8 +318,15 @@ export function UsersTable({
         </div>
       )}
 
-      {editing && (
-        <EditUserModal
+      {editing?.kind === "manager" && (
+        <EditManagerModal
+          user={editing}
+          open={true}
+          onClose={() => setEditing(null)}
+        />
+      )}
+      {editing?.kind === "technician" && (
+        <EditTechnicianModal
           user={editing}
           open={true}
           onClose={() => setEditing(null)}
