@@ -39,6 +39,16 @@ function formatDate(ms: number) {
   }).format(new Date(ms));
 }
 
+function parseBody(raw: string): { text: string; mediaUrls: string[] } {
+  try {
+    const p = JSON.parse(raw);
+    if (p && typeof p.text === "string" && Array.isArray(p.media)) {
+      return { text: p.text, mediaUrls: p.media.map((m: { url: string }) => m.url) };
+    }
+  } catch {}
+  return { text: raw, mediaUrls: [] };
+}
+
 export default async function TechnicianPage({
   params,
 }: {
@@ -62,7 +72,7 @@ export default async function TechnicianPage({
   const [queue, logbook, media] = await Promise.all([
     getQueue(undefined, manager.company_id).catch(() => [] as QueueItem[]),
     getLogbook(manager.company_id).catch(() => [] as LogbookEntry[]),
-    getTechnicianMedia(manager.company_id, id).catch(() => []),
+    getTechnicianMedia(manager.company_id, id, technician.phone).catch(() => []),
   ]);
 
   const entries: Entry[] = [];
@@ -179,27 +189,53 @@ export default async function TechnicianPage({
           </div>
         ) : (
           <div className="rounded-xl border border-border bg-card overflow-hidden divide-y divide-border/60">
-            {entries.map((entry, i) => (
-              <div key={i} className="flex items-start gap-4 px-5 py-4">
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm">{entry.description}</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {formatDate(entry.data.created_at)}
-                  </p>
+            {entries.map((entry, i) => {
+              const { text, mediaUrls } = entry.kind === "note"
+                ? parseBody(entry.description)
+                : { text: entry.description, mediaUrls: [] };
+              return (
+                <div key={i} className="flex items-start gap-4 px-5 py-4">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm">{text}</p>
+                    {mediaUrls.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {mediaUrls.map((url, j) => (
+                          <a
+                            key={j}
+                            href={`/api/media?url=${encodeURIComponent(url)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block relative size-20 rounded-md overflow-hidden border border-border bg-muted shrink-0"
+                          >
+                            <Image
+                              src={`/api/media?url=${encodeURIComponent(url)}`}
+                              alt="Technician upload"
+                              fill
+                              className="object-cover hover:opacity-90 transition-opacity"
+                              sizes="80px"
+                            />
+                          </a>
+                        ))}
+                      </div>
+                    )}
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {formatDate(entry.data.created_at)}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0 mt-0.5">
+                    <span className={[
+                      "text-[10px] font-semibold px-1.5 py-0.5 rounded-full",
+                      entry.kind === "assignment"
+                        ? "bg-skillcat-orange text-white"
+                        : "bg-muted text-muted-foreground",
+                    ].join(" ")}>
+                      {entry.kind === "assignment" ? "Assignment" : "Note"}
+                    </span>
+                    <MessageSquareIcon className="size-3 text-muted-foreground/50" />
+                  </div>
                 </div>
-                <div className="flex items-center gap-1.5 shrink-0 mt-0.5">
-                  <span className={[
-                    "text-[10px] font-semibold px-1.5 py-0.5 rounded-full",
-                    entry.kind === "assignment"
-                      ? "bg-skillcat-orange text-white"
-                      : "bg-muted text-muted-foreground",
-                  ].join(" ")}>
-                    {entry.kind === "assignment" ? "Assignment" : "Note"}
-                  </span>
-                  <MessageSquareIcon className="size-3 text-muted-foreground/50" />
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

@@ -107,8 +107,10 @@ export interface TechnicianMedia {
 export async function getTechnicianMedia(
   companyId: string,
   technicianId: string,
+  technicianPhone?: string | null,
 ): Promise<TechnicianMedia[]> {
   const params = new URLSearchParams({ company_id: companyId, technician_id: technicianId });
+  if (technicianPhone) params.set("technician_phone", technicianPhone);
   return apiFetch<TechnicianMedia[]>(`/api/technician-media?${params}`);
 }
 

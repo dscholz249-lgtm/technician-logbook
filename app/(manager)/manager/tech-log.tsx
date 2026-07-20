@@ -24,17 +24,27 @@ function parsePayload(raw: string): Record<string, unknown> {
   try { return JSON.parse(raw); } catch { return {}; }
 }
 
-function itemDescription(item: LogItem): string {
-  if (item.kind === "note") return item.data.body;
+function parseBody(raw: string): { text: string; mediaUrls: string[] } {
+  try {
+    const p = JSON.parse(raw);
+    if (p && typeof p.text === "string" && Array.isArray(p.media)) {
+      return { text: p.text, mediaUrls: p.media.map((m: { url: string }) => m.url) };
+    }
+  } catch {}
+  return { text: raw, mediaUrls: [] };
+}
+
+function itemContent(item: LogItem): { text: string; mediaUrls: string[] } {
+  if (item.kind === "note") return parseBody(item.data.body);
   const p = parsePayload(item.data.payload);
+  let text = "—";
   if (item.data.type === "assign_training") {
-    return `Assign ${p.employee_name} to the ${p.certification_name} training`;
-  }
-  if (item.data.type === "add_employee") {
+    text = `Assign ${p.employee_name} to the ${p.certification_name} training`;
+  } else if (item.data.type === "add_employee") {
     const e = p.new_employee as Record<string, string> | null ?? {};
-    return `Add employee — ${e.name}${e.email ? `, ${e.email}` : ""}${e.title ? `, ${e.title}` : ""}`;
+    text = `Add employee — ${e.name}${e.email ? `, ${e.email}` : ""}${e.title ? `, ${e.title}` : ""}`;
   }
-  return "—";
+  return { text, mediaUrls: [] };
 }
 
 interface TechGroup {
@@ -81,25 +91,50 @@ function TechRow({ group }: { group: TechGroup }) {
 
       {open && (
         <div className="px-4 pb-2 pl-16 space-y-0.5">
-          {group.items.map((item, i) => (
-            <div key={i} className="flex items-start gap-3 py-2 border-b border-border/30 last:border-0">
-              <span className="text-xs text-muted-foreground w-16 shrink-0 pt-0.5">
-                {formatTime(item.data.created_at)}
-              </span>
-              <p className="flex-1 text-sm text-muted-foreground">{itemDescription(item)}</p>
-              <div className="flex items-center gap-1.5 shrink-0">
-                <span className={[
-                  "text-[10px] font-semibold px-1.5 py-0.5 rounded-full",
-                  item.kind === "assignment"
-                    ? "bg-skillcat-orange text-white"
-                    : "bg-muted text-muted-foreground",
-                ].join(" ")}>
-                  {item.kind === "assignment" ? "Assignment" : "Note"}
+          {group.items.map((item, i) => {
+            const { text, mediaUrls } = itemContent(item);
+            return (
+              <div key={i} className="flex items-start gap-3 py-2 border-b border-border/30 last:border-0">
+                <span className="text-xs text-muted-foreground w-16 shrink-0 pt-0.5">
+                  {formatTime(item.data.created_at)}
                 </span>
-                <MessageSquareIcon className="size-3 text-muted-foreground/50" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-muted-foreground">{text}</p>
+                  {mediaUrls.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mt-1.5">
+                      {mediaUrls.map((url, j) => (
+                        <a
+                          key={j}
+                          href={`/api/media?url=${encodeURIComponent(url)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block size-16 rounded overflow-hidden border border-border bg-muted shrink-0"
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={`/api/media?url=${encodeURIComponent(url)}`}
+                            alt="Technician upload"
+                            className="size-full object-cover hover:opacity-90 transition-opacity"
+                          />
+                        </a>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <span className={[
+                    "text-[10px] font-semibold px-1.5 py-0.5 rounded-full",
+                    item.kind === "assignment"
+                      ? "bg-skillcat-orange text-white"
+                      : "bg-muted text-muted-foreground",
+                  ].join(" ")}>
+                    {item.kind === "assignment" ? "Assignment" : "Note"}
+                  </span>
+                  <MessageSquareIcon className="size-3 text-muted-foreground/50" />
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
