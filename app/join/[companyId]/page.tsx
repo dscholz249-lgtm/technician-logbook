@@ -58,7 +58,7 @@ export default async function JoinPage({ params }: Props) {
 
           {/* Loom video */}
           {loomVideoId && (
-            <div className="w-full rounded-xl overflow-hidden border border-border aspect-video lg:aspect-auto lg:flex-1 lg:min-h-[420px]">
+            <div className="w-full rounded-xl overflow-hidden border border-border aspect-video lg:flex-1">
               <iframe
                 src={`https://www.loom.com/embed/${loomVideoId}?hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true`}
                 allowFullScreen

@@ -14,7 +14,7 @@ import type { Technician } from "@/lib/supabase/db";
 
 export const dynamic = "force-dynamic";
 
-const SKILLCAT_SMS_NUMBER = process.env.SKILLCAT_SMS_PHONE ?? "(251) 313-5407";
+const SKILLCAT_SMS_NUMBER = (process.env.SKILLCAT_SMS_PHONE ?? "(251) 313-5407").replace(/^["']|["']$/g, "");
 
 export type LogItem =
   | { kind: "assignment"; data: QueueItem; techName: string }
@@ -151,7 +151,7 @@ export default async function ManagerPage() {
       </div>
 
       {/* SMS features + settings */}
-      <div className="grid grid-cols-2 gap-4 items-start">
+      <div className="grid grid-cols-1 gap-4 items-start md:grid-cols-2">
         {/* Left: how it works */}
         <div className="rounded-xl border border-border bg-card px-5 py-4 space-y-4">
           <div>
