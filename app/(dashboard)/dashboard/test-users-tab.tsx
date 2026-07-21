@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useRef } from "react";
 import { toast } from "sonner";
 import type { CompanyWithRelations, Manager } from "@/lib/supabase/db";
 import { saveCompany, removeCompany, syncAllCompanies, addManager, removeManager } from "./company-actions";
@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { UploadIcon } from "lucide-react";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
@@ -118,6 +119,34 @@ function AddManagerForm({ companyId, onAdded }: { companyId: string; onAdded: ()
   );
 }
 
+function CsvUploadButton({ textareaRef }: { textareaRef: React.RefObject<HTMLTextAreaElement | null> }) {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      if (textareaRef.current) textareaRef.current.value = ev.target?.result as string;
+    };
+    reader.readAsText(file);
+    e.target.value = "";
+  }
+
+  return (
+    <>
+      <input ref={inputRef} type="file" accept=".csv,text/csv" className="hidden" onChange={handleChange} />
+      <button
+        type="button"
+        onClick={() => inputRef.current?.click()}
+        className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <UploadIcon className="size-3" /> Upload file
+      </button>
+    </>
+  );
+}
+
 function CompanyForm({
   company,
   onClose,
@@ -132,6 +161,12 @@ function CompanyForm({
 
   const [createMode, setCreateMode] = useState<"manual" | "csv">("manual");
   const [pending, startTransition] = useTransition();
+
+  // Refs for file upload → textarea injection
+  const directorsCsvRef = useRef<HTMLTextAreaElement>(null);
+  const managersCsvRef = useRef<HTMLTextAreaElement>(null);
+  const techniciansCsvRef = useRef<HTMLTextAreaElement>(null);
+  const peopleCsvRef = useRef<HTMLTextAreaElement>(null);
 
   function handleSubmit(e: { preventDefault(): void; currentTarget: HTMLFormElement }) {
     e.preventDefault();
@@ -185,10 +220,14 @@ function CompanyForm({
             <AddManagerForm companyId={company.id} onAdded={() => {}} />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="technicians_csv">
-              Technicians <span className="text-muted-foreground text-xs">CSV — Name, Email, Title (one per line)</span>
-            </Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="technicians_csv">
+                Technicians <span className="text-muted-foreground text-xs">CSV — Name, Email, Title (one per line)</span>
+              </Label>
+              <CsvUploadButton textareaRef={techniciansCsvRef} />
+            </div>
             <Textarea
+              ref={techniciansCsvRef}
               id="technicians_csv"
               name="technicians_csv"
               defaultValue={techCsv}
@@ -223,10 +262,14 @@ function CompanyForm({
           {createMode === "manual" ? (
             <>
               <div className="space-y-1.5">
-                <Label htmlFor="directors_csv">
-                  Directors <span className="text-muted-foreground text-xs">Name, Email, Phone (one per line)</span>
-                </Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="directors_csv">
+                    Directors <span className="text-muted-foreground text-xs">Name, Email, Phone (one per line)</span>
+                  </Label>
+                  <CsvUploadButton textareaRef={directorsCsvRef} />
+                </div>
                 <Textarea
+                  ref={directorsCsvRef}
                   id="directors_csv"
                   name="directors_csv"
                   placeholder={"Jane Smith, jane@co.com, +1 555 000 0001"}
@@ -234,10 +277,14 @@ function CompanyForm({
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="managers_csv">
-                  Managers <span className="text-muted-foreground text-xs">Name, Email, Phone (one per line)</span>
-                </Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="managers_csv">
+                    Managers <span className="text-muted-foreground text-xs">Name, Email, Phone (one per line)</span>
+                  </Label>
+                  <CsvUploadButton textareaRef={managersCsvRef} />
+                </div>
                 <Textarea
+                  ref={managersCsvRef}
                   id="managers_csv"
                   name="managers_csv"
                   placeholder={"John Smith, john@co.com, +1 555 000 0000\nMike Torres, mike@co.com"}
@@ -246,10 +293,14 @@ function CompanyForm({
                 <p className="text-xs text-muted-foreground">At least one director or manager is required.</p>
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="technicians_csv">
-                  Technicians <span className="text-muted-foreground text-xs">Name, Email, Title (one per line, optional)</span>
-                </Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="technicians_csv">
+                    Technicians <span className="text-muted-foreground text-xs">Name, Email, Title (one per line, optional)</span>
+                  </Label>
+                  <CsvUploadButton textareaRef={techniciansCsvRef} />
+                </div>
                 <Textarea
+                  ref={techniciansCsvRef}
                   id="technicians_csv"
                   name="technicians_csv"
                   placeholder={"Alex Rivera, alex@co.com, HVAC Tech\nSam Lee, sam@co.com, Refrigeration Tech"}
@@ -259,10 +310,14 @@ function CompanyForm({
             </>
           ) : (
             <div className="space-y-1.5">
-              <Label htmlFor="people_csv">
-                All people <span className="text-muted-foreground text-xs">Role, Name, Email, Phone/Title (one per line)</span>
-              </Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="people_csv">
+                  All people <span className="text-muted-foreground text-xs">Role, Name, Email, Phone/Title (one per line)</span>
+                </Label>
+                <CsvUploadButton textareaRef={peopleCsvRef} />
+              </div>
               <Textarea
+                ref={peopleCsvRef}
                 id="people_csv"
                 name="people_csv"
                 placeholder={[

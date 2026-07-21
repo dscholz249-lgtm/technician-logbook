@@ -1,8 +1,12 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { getManagerByEmail } from "@/lib/supabase/db";
+import { env } from "@/lib/env";
 import { RequestHelpButton } from "./manager/request-help-button";
+import { ImpersonationBanner } from "./impersonation-banner";
+import type { ImpersonateCookie } from "@/app/(dashboard)/dashboard/managers/impersonate-actions";
 
 export default async function ManagerLayout({
   children,
@@ -16,13 +20,30 @@ export default async function ManagerLayout({
     redirect("/auth/sign-in");
   }
 
-  const manager = await getManagerByEmail(user.email).catch(() => null);
+  // Admins can impersonate any manager/director via cookie
+  const isAdmin = env.ADMIN_EMAILS.includes(user.email.toLowerCase());
+  const jar = await cookies();
+  const impersonateCookie = jar.get("skillcat_impersonate");
+  let impersonating: ImpersonateCookie | null = null;
+  let effectiveEmail = user.email;
+
+  if (isAdmin && impersonateCookie?.value) {
+    try {
+      impersonating = JSON.parse(impersonateCookie.value) as ImpersonateCookie;
+      effectiveEmail = impersonating.email;
+    } catch {}
+  }
+
+  const manager = await getManagerByEmail(effectiveEmail).catch(() => null);
   if (!manager) {
     redirect("/auth/sign-in?error=not_authorized");
   }
 
   return (
     <div className="min-h-screen flex flex-col">
+      {impersonating && (
+        <ImpersonationBanner name={impersonating.name} role={impersonating.role} />
+      )}
       <header className="border-b border-border bg-card px-6 py-3 flex items-center justify-between">
         <div className="flex items-center">
           <Link href="/manager">
@@ -31,7 +52,7 @@ export default async function ManagerLayout({
         </div>
         <div className="flex items-center gap-3">
           <span className="text-xs text-muted-foreground hidden sm:block">
-            {user.email}
+            {impersonating ? impersonating.email : user.email}
           </span>
           <form action="/auth/sign-out" method="POST">
             <button

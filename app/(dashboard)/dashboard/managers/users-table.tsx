@@ -10,7 +10,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "@/components/ui/table";
 import { InviteButton } from "./invite-button";
 import { updateUser, updateTechnician } from "../company-actions";
-import { PencilIcon } from "lucide-react";
+import { startImpersonation } from "./impersonate-actions";
+import { PencilIcon, EyeIcon } from "lucide-react";
 import type { ManagerRole } from "@/lib/supabase/db";
 
 interface ManagerRow {
@@ -172,6 +173,30 @@ function EditTechnicianModal({
   );
 }
 
+// ----------------------------------------------------------------- Impersonate
+
+function ImpersonateButton({ user }: { user: AnyUserRow }) {
+  const email = user.email;
+  if (!email) return null;
+  const role = user.kind === "technician" ? "technician" : user.role;
+  return (
+    <form action={startImpersonation}>
+      <input type="hidden" name="email" value={email} />
+      <input type="hidden" name="name" value={user.name} />
+      <input type="hidden" name="role" value={role} />
+      <Button
+        type="submit"
+        variant="ghost"
+        size="icon-sm"
+        className="opacity-0 group-hover:opacity-100 transition-opacity"
+        title={`View as ${user.name}`}
+      >
+        <EyeIcon />
+      </Button>
+    </form>
+  );
+}
+
 // ----------------------------------------------------------------- Table
 
 export function UsersTable({
@@ -300,6 +325,7 @@ export function UsersTable({
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1">
+                      <ImpersonateButton user={u} />
                       <Button
                         variant="ghost"
                         size="icon-sm"
