@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { getManagerByEmail } from "@/lib/supabase/db";
+import { getManagerByEmail, getTechnicianByEmail } from "@/lib/supabase/db";
 import { env } from "@/lib/env";
 
 export async function sendMagicLink(
@@ -11,8 +11,9 @@ export async function sendMagicLink(
 
   const isAdmin = env.ADMIN_EMAILS.includes(normalized);
   const manager = isAdmin ? null : await getManagerByEmail(normalized).catch(() => null);
+  const technician = (!isAdmin && !manager) ? await getTechnicianByEmail(normalized).catch(() => null) : null;
 
-  if (!isAdmin && !manager) {
+  if (!isAdmin && !manager && !technician) {
     return { error: "Email not recognized. Contact your SkillCat administrator." };
   }
 
