@@ -119,7 +119,22 @@ function AddManagerForm({ companyId, onAdded }: { companyId: string; onAdded: ()
   );
 }
 
-function CsvUploadButton({ textareaRef }: { textareaRef: React.RefObject<HTMLTextAreaElement | null> }) {
+const ROLE_WORDS = ["director", "manager", "technician"];
+
+function isMultiRoleCsv(content: string): boolean {
+  const firstLine = content.split("\n").find(l => l.trim());
+  if (!firstLine) return false;
+  const firstCol = firstLine.split(",")[0]?.trim().replace(/^["']|["']$/g, "").toLowerCase();
+  return ROLE_WORDS.includes(firstCol);
+}
+
+function CsvUploadButton({
+  textareaRef,
+  onMultiRole,
+}: {
+  textareaRef: React.RefObject<HTMLTextAreaElement | null>;
+  onMultiRole?: (content: string) => void;
+}) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -127,7 +142,12 @@ function CsvUploadButton({ textareaRef }: { textareaRef: React.RefObject<HTMLTex
     if (!file) return;
     const reader = new FileReader();
     reader.onload = ev => {
-      if (textareaRef.current) textareaRef.current.value = ev.target?.result as string;
+      const content = ev.target?.result as string;
+      if (onMultiRole && isMultiRoleCsv(content)) {
+        onMultiRole(content);
+      } else if (textareaRef.current) {
+        textareaRef.current.value = content;
+      }
     };
     reader.readAsText(file);
     e.target.value = "";
@@ -167,6 +187,16 @@ function CompanyForm({
   const managersCsvRef = useRef<HTMLTextAreaElement>(null);
   const techniciansCsvRef = useRef<HTMLTextAreaElement>(null);
   const peopleCsvRef = useRef<HTMLTextAreaElement>(null);
+
+  // When a multi-role CSV is uploaded from a manual-mode textarea, auto-switch to CSV Import
+  function handleMultiRoleUpload(content: string) {
+    setCreateMode("csv");
+    // Defer so the textarea is rendered before we set its value
+    setTimeout(() => {
+      if (peopleCsvRef.current) peopleCsvRef.current.value = content;
+    }, 0);
+    toast("Multi-role CSV detected — switched to CSV Import mode.");
+  }
 
   function handleSubmit(e: { preventDefault(): void; currentTarget: HTMLFormElement }) {
     e.preventDefault();
@@ -266,7 +296,7 @@ function CompanyForm({
                   <Label htmlFor="directors_csv">
                     Directors <span className="text-muted-foreground text-xs">Name, Email, Phone (one per line)</span>
                   </Label>
-                  <CsvUploadButton textareaRef={directorsCsvRef} />
+                  <CsvUploadButton textareaRef={directorsCsvRef} onMultiRole={handleMultiRoleUpload} />
                 </div>
                 <Textarea
                   ref={directorsCsvRef}
@@ -281,7 +311,7 @@ function CompanyForm({
                   <Label htmlFor="managers_csv">
                     Managers <span className="text-muted-foreground text-xs">Name, Email, Phone (one per line)</span>
                   </Label>
-                  <CsvUploadButton textareaRef={managersCsvRef} />
+                  <CsvUploadButton textareaRef={managersCsvRef} onMultiRole={handleMultiRoleUpload} />
                 </div>
                 <Textarea
                   ref={managersCsvRef}
@@ -297,7 +327,7 @@ function CompanyForm({
                   <Label htmlFor="technicians_csv">
                     Technicians <span className="text-muted-foreground text-xs">Name, Email, Title (one per line, optional)</span>
                   </Label>
-                  <CsvUploadButton textareaRef={techniciansCsvRef} />
+                  <CsvUploadButton textareaRef={techniciansCsvRef} onMultiRole={handleMultiRoleUpload} />
                 </div>
                 <Textarea
                   ref={techniciansCsvRef}

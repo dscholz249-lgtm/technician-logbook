@@ -53,7 +53,13 @@ function parsePersonCsv(raw: string): { name: string; email: string; phone: stri
     .filter(r => r.name && r.email);
 }
 
-// Parses "role, name, email, phone_or_title" rows for the combined CSV import mode
+// Strips surrounding quotes from a CSV field (handles Excel/Sheets exports)
+function unquote(s: string): string {
+  return s.trim().replace(/^["']|["']$/g, "");
+}
+
+// Parses "role, name, email[, phone_or_title]" rows for the combined CSV import mode.
+// Handles 3-column (role, name, email) and 4-column variants, with or without quotes.
 function parseAllPeopleCsv(raw: string): {
   role: "director" | "manager" | "technician";
   name: string;
@@ -64,9 +70,15 @@ function parseAllPeopleCsv(raw: string): {
   return raw
     .split("\n")
     .map(line => line.trim())
-    .filter(line => line && !line.toLowerCase().startsWith("role"))
+    .filter(line => {
+      if (!line) return false;
+      const firstCol = unquote(line.split(",")[0] ?? "").toLowerCase();
+      // Skip header rows
+      return firstCol !== "role" && firstCol !== "type";
+    })
     .map(line => {
-      const [role, name, email, extra] = line.split(",").map(f => f.trim());
+      const parts = line.split(",").map(unquote);
+      const [role, name, email, extra] = parts;
       const r = role?.toLowerCase();
       if (r !== "director" && r !== "manager" && r !== "technician") return null;
       if (!name || !email) return null;
