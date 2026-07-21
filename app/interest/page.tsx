@@ -77,7 +77,7 @@ export default function InterestPage() {
                   src="/Tech-upload.mp4"
                   controls
                   playsInline
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain"
                 />
               </div>
               <p className="text-xs text-center text-muted-foreground font-medium">
