@@ -33,10 +33,11 @@ export async function getQueue(
   return apiFetch<QueueItem[]>(`/api/queue${qs}`);
 }
 
-export async function getLogbook(companyId?: string, managerPhone?: string): Promise<LogbookEntry[]> {
+export async function getLogbook(companyId?: string, managerPhone?: string, technicianId?: string): Promise<LogbookEntry[]> {
   const params = new URLSearchParams();
   if (companyId) params.set("company_id", companyId);
   if (managerPhone) params.set("manager_phone", managerPhone);
+  if (technicianId) params.set("technician_id", technicianId);
   const qs = params.size ? `?${params}` : "";
   return apiFetch<LogbookEntry[]>(`/api/logbook${qs}`);
 }

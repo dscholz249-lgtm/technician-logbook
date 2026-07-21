@@ -193,6 +193,26 @@ export async function replaceTechnicians(
   if (error) throw error;
 }
 
+export async function getTechnicianByEmail(email: string): Promise<Technician | null> {
+  const db = createAdminClient();
+  const { data, error } = await db
+    .from("technicians")
+    .select("*")
+    .eq("email", email.toLowerCase())
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateTechnicianPhone(technicianId: string, phone: string): Promise<void> {
+  const db = createAdminClient();
+  const { error } = await db
+    .from("technicians")
+    .update({ phone })
+    .eq("id", technicianId);
+  if (error) throw error;
+}
+
 // ----------------------------------------------------------------- urgent_requests
 export async function getUrgentRequests(): Promise<UrgentRequest[]> {
   const db = createAdminClient();

@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { getManagerByEmail } from "@/lib/supabase/db";
+import { getManagerByEmail, getTechnicianByEmail } from "@/lib/supabase/db";
 import { env } from "@/lib/env";
 
 export async function GET(request: NextRequest) {
@@ -57,6 +57,11 @@ export async function GET(request: NextRequest) {
   const manager = await getManagerByEmail(user.email).catch(() => null);
   if (manager) {
     return NextResponse.redirect(`${origin}/manager`);
+  }
+
+  const technician = await getTechnicianByEmail(user.email).catch(() => null);
+  if (technician) {
+    return NextResponse.redirect(`${origin}/tech`);
   }
 
   await supabase.auth.signOut();
