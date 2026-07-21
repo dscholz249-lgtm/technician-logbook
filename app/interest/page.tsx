@@ -10,7 +10,6 @@ export const metadata: Metadata = {
 };
 
 const LOOM_VIDEO_ID = "ba5b0395f2044d4bac604951dcc83a64";
-const GDRIVE_FILE_ID = "1kX_eRp4czljqz6A8173eWkROV3ez_iUx";
 
 const FEATURES = [
   {
@@ -73,12 +72,12 @@ export default function InterestPage() {
               </p>
             </div>
             <div className="space-y-2">
-              <div className="rounded-xl overflow-hidden border border-border aspect-video">
-                <iframe
-                  src={`https://drive.google.com/file/d/${GDRIVE_FILE_ID}/preview`}
-                  allowFullScreen
-                  allow="autoplay"
-                  className="w-full h-full"
+              <div className="rounded-xl overflow-hidden border border-border aspect-video bg-muted">
+                <video
+                  src="/Tech-upload.mp4"
+                  controls
+                  playsInline
+                  className="w-full h-full object-cover"
                 />
               </div>
               <p className="text-xs text-center text-muted-foreground font-medium">
