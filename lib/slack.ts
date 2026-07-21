@@ -17,6 +17,29 @@ export async function notifySlack(blocks: object[]): Promise<void> {
   }
 }
 
+export function interestRequestBlocks(opts: {
+  name: string;
+  email: string;
+  companyName: string | null;
+  teamSize: string | null;
+}): object[] {
+  return [
+    {
+      type: "section",
+      text: { type: "mrkdwn", text: ":wave: *New interest request*" },
+    },
+    {
+      type: "section",
+      fields: [
+        { type: "mrkdwn", text: `*Name*\n${opts.name}` },
+        { type: "mrkdwn", text: `*Email*\n${opts.email}` },
+        { type: "mrkdwn", text: `*Company*\n${opts.companyName ?? "—"}` },
+        { type: "mrkdwn", text: `*Team size*\n${opts.teamSize ?? "—"}` },
+      ],
+    },
+  ];
+}
+
 export function urgentRequestBlocks(opts: {
   managerName: string;
   companyName: string;

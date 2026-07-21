@@ -5,8 +5,11 @@ import { AutoRefresh } from "@/components/auto-refresh";
 import { TechPhoneForm } from "./tech-phone-form";
 import { ContactCardSection } from "@/app/(manager)/manager/contact-card-section";
 import { CameraIcon, MessageSquareIcon, PhoneIcon } from "lucide-react";
+import { cookies } from "next/headers";
+import { env } from "@/lib/env";
 import type { LogbookEntry } from "@/lib/types";
 import type { TechnicianMedia } from "@/lib/api";
+import type { ImpersonateCookie } from "@/app/(dashboard)/dashboard/managers/impersonate-actions";
 
 export const dynamic = "force-dynamic";
 
@@ -40,7 +43,18 @@ export default async function TechPortalPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  const technician = await getTechnicianByEmail(user!.email!);
+  const isAdmin = env.ADMIN_EMAILS.includes((user?.email ?? "").toLowerCase());
+  const jar = await cookies();
+  const impersonateCookie = jar.get("skillcat_impersonate");
+  let effectiveEmail = user!.email!;
+  if (isAdmin && impersonateCookie?.value) {
+    try {
+      const imp = JSON.parse(impersonateCookie.value) as ImpersonateCookie;
+      effectiveEmail = imp.email;
+    } catch {}
+  }
+
+  const technician = await getTechnicianByEmail(effectiveEmail);
   if (!technician) return null;
 
   const [logbook, media] = await Promise.all([

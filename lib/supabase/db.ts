@@ -54,6 +54,16 @@ export interface CompanyWithRelations extends Company {
   technicians: Technician[];
 }
 
+export interface InterestRequest {
+  id: string;
+  name: string;
+  email: string;
+  company_name: string | null;
+  team_size: string | null;
+  status: "pending" | "contacted" | "created";
+  created_at: string;
+}
+
 // ----------------------------------------------------------------- companies
 export async function getCompanyById(id: string): Promise<Company | null> {
   const db = createAdminClient();
@@ -272,4 +282,43 @@ export async function addTechnician(
     .single();
   if (error) throw error;
   return data;
+}
+
+// ----------------------------------------------------------------- interest_requests
+export async function createInterestRequest(req: {
+  name: string;
+  email: string;
+  company_name?: string;
+  team_size?: string;
+}): Promise<InterestRequest> {
+  const db = createAdminClient();
+  const { data, error } = await db
+    .from("interest_requests")
+    .insert(req)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function getInterestRequests(): Promise<InterestRequest[]> {
+  const db = createAdminClient();
+  const { data, error } = await db
+    .from("interest_requests")
+    .select("*")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function updateInterestRequestStatus(
+  id: string,
+  status: InterestRequest["status"],
+): Promise<void> {
+  const db = createAdminClient();
+  const { error } = await db
+    .from("interest_requests")
+    .update({ status })
+    .eq("id", id);
+  if (error) throw error;
 }
