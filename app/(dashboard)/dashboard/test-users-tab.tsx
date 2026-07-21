@@ -232,7 +232,7 @@ function CompanyForm({
               name="technicians_csv"
               defaultValue={techCsv}
               placeholder={"John Smith, john@co.com, HVAC Tech\nMike Torres, mike@co.com, Refrigeration Tech"}
-              className="min-h-28 font-mono text-xs"
+              className="min-h-28 max-h-60 font-mono text-xs"
             />
             <p className="text-xs text-muted-foreground">Replaces existing technicians on save.</p>
           </div>
@@ -273,7 +273,7 @@ function CompanyForm({
                   id="directors_csv"
                   name="directors_csv"
                   placeholder={"Jane Smith, jane@co.com, +1 555 000 0001"}
-                  className="min-h-20 font-mono text-xs"
+                  className="min-h-20 max-h-60 font-mono text-xs"
                 />
               </div>
               <div className="space-y-1.5">
@@ -288,7 +288,7 @@ function CompanyForm({
                   id="managers_csv"
                   name="managers_csv"
                   placeholder={"John Smith, john@co.com, +1 555 000 0000\nMike Torres, mike@co.com"}
-                  className="min-h-20 font-mono text-xs"
+                  className="min-h-20 max-h-60 font-mono text-xs"
                 />
                 <p className="text-xs text-muted-foreground">At least one director or manager is required.</p>
               </div>
@@ -304,7 +304,7 @@ function CompanyForm({
                   id="technicians_csv"
                   name="technicians_csv"
                   placeholder={"Alex Rivera, alex@co.com, HVAC Tech\nSam Lee, sam@co.com, Refrigeration Tech"}
-                  className="min-h-20 font-mono text-xs"
+                  className="min-h-20 max-h-60 font-mono text-xs"
                 />
               </div>
             </>
@@ -325,7 +325,7 @@ function CompanyForm({
                   "manager, John Smith, john@co.com, +1 555 000 0000",
                   "technician, Alex Rivera, alex@co.com, HVAC Tech",
                 ].join("\n")}
-                className="min-h-40 font-mono text-xs"
+                className="min-h-40 max-h-60 font-mono text-xs"
               />
               <p className="text-xs text-muted-foreground">
                 Roles: <code className="bg-muted px-0.5 rounded">director</code>, <code className="bg-muted px-0.5 rounded">manager</code>, <code className="bg-muted px-0.5 rounded">technician</code>.
