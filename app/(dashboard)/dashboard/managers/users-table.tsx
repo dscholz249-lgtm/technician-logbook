@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "@/components/ui/table";
 import { InviteButton } from "./invite-button";
-import { updateUser, updateTechnician } from "../company-actions";
+import { adminUpdateUser } from "../company-actions";
 import { startImpersonation } from "./impersonate-actions";
 import { PencilIcon, EyeIcon } from "lucide-react";
 import type { ManagerRole } from "@/lib/supabase/db";
@@ -41,31 +41,35 @@ type AnyUserRow = ManagerRow | TechnicianRow;
 
 interface Company { id: string; name: string }
 
-// ----------------------------------------------------------------- Edit modal
+// ----------------------------------------------------------------- Edit modal (unified)
 
-function EditManagerModal({
+function EditUserModal({
   user,
+  companies,
   open,
   onClose,
 }: {
-  user: ManagerRow;
+  user: AnyUserRow;
+  companies: Company[];
   open: boolean;
   onClose: () => void;
 }) {
   const [pending, startTransition] = useTransition();
 
+  const selectClass =
+    "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring";
+
+  const defaultRole = user.kind === "technician" ? "technician" : user.role;
+
   function handleSubmit(e: { preventDefault(): void; currentTarget: HTMLFormElement }) {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
     startTransition(async () => {
-      const result = await updateUser(fd);
+      const result = await adminUpdateUser(fd);
       if (result.error) toast.error(result.error);
       else { toast.success("User updated."); onClose(); }
     });
   }
-
-  const selectClass =
-    "flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring";
 
   return (
     <Dialog open={open} onOpenChange={o => !o && onClose()}>
@@ -74,96 +78,56 @@ function EditManagerModal({
           <DialogTitle>Edit user</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <input type="hidden" name="manager_id" value={user.id} />
-          <input type="hidden" name="company_id" value={user.company_id} />
-          <div className="space-y-1">
-            <p className="text-xs text-muted-foreground">Company: <span className="text-foreground font-medium">{user.companyName}</span></p>
-          </div>
+          <input type="hidden" name="kind" value={user.kind} />
+          <input type="hidden" name="user_id" value={user.id} />
+          <input type="hidden" name="old_company_id" value={user.company_id} />
+
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="eu_name">Name</Label>
-              <Input id="eu_name" name="manager_name" defaultValue={user.name} required />
+              <Input id="eu_name" name="name" defaultValue={user.name} required />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="eu_email">Email</Label>
-              <Input id="eu_email" name="manager_email" type="email" defaultValue={user.email} required />
+              <Input id="eu_email" name="email" type="email" defaultValue={user.email ?? ""} required />
             </div>
           </div>
+
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="eu_phone">Phone <span className="text-muted-foreground text-xs">(optional)</span></Label>
-              <Input id="eu_phone" name="manager_phone" type="tel" defaultValue={user.phone ?? ""} placeholder="+1 555 000 0000" />
+              <Input id="eu_phone" name="phone" type="tel" defaultValue={user.phone ?? ""} placeholder="+1 555 000 0000" />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="eu_role">Role</Label>
-              <select id="eu_role" name="manager_role" defaultValue={user.role} className={selectClass}>
-                <option value="manager">Manager</option>
+              <select id="eu_role" name="role" defaultValue={defaultRole} className={selectClass}>
                 <option value="director">Director</option>
+                <option value="manager">Manager</option>
+                <option value="technician">Technician</option>
               </select>
             </div>
           </div>
-          <DialogFooter showCloseButton>
-            <Button type="submit" disabled={pending}>{pending ? "Saving…" : "Save changes"}</Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
-}
 
-function EditTechnicianModal({
-  user,
-  open,
-  onClose,
-}: {
-  user: TechnicianRow;
-  open: boolean;
-  onClose: () => void;
-}) {
-  const [pending, startTransition] = useTransition();
-
-  function handleSubmit(e: { preventDefault(): void; currentTarget: HTMLFormElement }) {
-    e.preventDefault();
-    const fd = new FormData(e.currentTarget);
-    startTransition(async () => {
-      const result = await updateTechnician(fd);
-      if (result.error) toast.error(result.error);
-      else { toast.success("Technician updated."); onClose(); }
-    });
-  }
-
-  return (
-    <Dialog open={open} onOpenChange={o => !o && onClose()}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Edit technician</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input type="hidden" name="technician_id" value={user.id} />
-          <input type="hidden" name="company_id" value={user.company_id} />
-          <div className="space-y-1">
-            <p className="text-xs text-muted-foreground">Company: <span className="text-foreground font-medium">{user.companyName}</span></p>
-          </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="et_name">Name</Label>
-              <Input id="et_name" name="technician_name" defaultValue={user.name} required />
+              <Label htmlFor="eu_company">Company</Label>
+              <select id="eu_company" name="company_id" defaultValue={user.company_id} className={selectClass}>
+                {companies.map(c => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="et_title">Title <span className="text-muted-foreground text-xs">(optional)</span></Label>
-              <Input id="et_title" name="technician_title" defaultValue={user.title ?? ""} placeholder="e.g. HVAC Tech" />
+              <Label htmlFor="eu_title">Title <span className="text-muted-foreground text-xs">(optional)</span></Label>
+              <Input
+                id="eu_title"
+                name="title"
+                defaultValue={user.kind === "technician" ? (user.title ?? "") : ""}
+                placeholder="e.g. HVAC Tech"
+              />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="et_email">Email <span className="text-muted-foreground text-xs">(optional)</span></Label>
-              <Input id="et_email" name="technician_email" type="email" defaultValue={user.email ?? ""} />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="et_phone">Phone <span className="text-muted-foreground text-xs">(for MMS)</span></Label>
-              <Input id="et_phone" name="technician_phone" type="tel" defaultValue={user.phone ?? ""} placeholder="+1 555 000 0000" />
-            </div>
-          </div>
+
           <DialogFooter showCloseButton>
             <Button type="submit" disabled={pending}>{pending ? "Saving…" : "Save changes"}</Button>
           </DialogFooter>
@@ -344,16 +308,10 @@ export function UsersTable({
         </div>
       )}
 
-      {editing?.kind === "manager" && (
-        <EditManagerModal
+      {editing && (
+        <EditUserModal
           user={editing}
-          open={true}
-          onClose={() => setEditing(null)}
-        />
-      )}
-      {editing?.kind === "technician" && (
-        <EditTechnicianModal
-          user={editing}
+          companies={companies}
           open={true}
           onClose={() => setEditing(null)}
         />

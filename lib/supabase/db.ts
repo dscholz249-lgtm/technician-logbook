@@ -128,7 +128,7 @@ export async function upsertManager(
   if (managerId) {
     const { data: row, error } = await db
       .from("managers")
-      .update({ ...data, updated_at: new Date().toISOString() })
+      .update({ company_id: companyId, ...data, updated_at: new Date().toISOString() })
       .eq("id", managerId)
       .select()
       .single();
@@ -263,10 +263,16 @@ export async function resolveUrgentRequest(id: string): Promise<void> {
 
 export async function updateTechnician(
   id: string,
-  row: { name?: string; email?: string | null; title?: string | null; phone?: string | null },
+  row: { name?: string; email?: string | null; title?: string | null; phone?: string | null; company_id?: string },
 ): Promise<void> {
   const db = createAdminClient();
   const { error } = await db.from("technicians").update(row).eq("id", id);
+  if (error) throw error;
+}
+
+export async function deleteTechnician(id: string): Promise<void> {
+  const db = createAdminClient();
+  const { error } = await db.from("technicians").delete().eq("id", id);
   if (error) throw error;
 }
 

@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { env } from "@/lib/env";
 import {
   upsertCompany, upsertManager, replaceTechnicians, addTechnician,
-  updateTechnician as dbUpdateTechnician,
+  updateTechnician as dbUpdateTechnician, deleteTechnician,
   deleteCompany, getCompanies, softDeleteManager,
 } from "@/lib/supabase/db";
 
@@ -299,6 +299,61 @@ export async function removeCompany(companyId: string): Promise<{ error?: string
   try {
     await deleteCompany(companyId);
     revalidatePath("/dashboard");
+    return {};
+  } catch (err) {
+    return { error: errMsg(err) };
+  }
+}
+
+// Unified admin edit — handles all fields and cross-table role moves.
+export async function adminUpdateUser(formData: FormData): Promise<{ error?: string }> {
+  await requireAdmin();
+
+  const kind = formData.get("kind") as "manager" | "technician";
+  const userId = formData.get("user_id") as string;
+  const oldCompanyId = (formData.get("old_company_id") as string)?.trim();
+  const companyId = (formData.get("company_id") as string)?.trim();
+  const name = (formData.get("name") as string)?.trim();
+  const email = (formData.get("email") as string)?.trim().toLowerCase();
+  const phone = (formData.get("phone") as string)?.trim() || null;
+  const roleRaw = (formData.get("role") as string) || "manager";
+  const title = (formData.get("title") as string)?.trim() || null;
+
+  if (!userId || !companyId || !name || !email) {
+    return { error: "Name, email, and company are required." };
+  }
+
+  const newRole = roleRaw as "director" | "manager" | "technician";
+
+  try {
+    if (kind === "manager" && newRole !== "technician") {
+      // Manager/Director → Manager/Director: update in place (company_id now included in upsert)
+      await upsertManager(companyId, { name, email, phone, role: newRole }, userId);
+    } else if (kind === "technician" && newRole === "technician") {
+      // Technician → Technician: update all fields including company
+      await dbUpdateTechnician(userId, { name, email, phone, title, company_id: companyId });
+    } else if (kind === "technician" && newRole !== "technician") {
+      // Technician → Manager/Director: create manager, delete technician
+      await upsertManager(companyId, { name, email, phone, role: newRole as "manager" | "director" });
+      await deleteTechnician(userId);
+    } else {
+      // Manager/Director → Technician: create technician, soft-delete manager
+      await addTechnician(companyId, { name, email, phone, title });
+      await softDeleteManager(userId);
+    }
+
+    // Sync all affected companies (old + new, deduped)
+    const companyIds = [...new Set([oldCompanyId, companyId].filter(Boolean))];
+    const companies = await getCompanies();
+    await Promise.all(
+      companyIds.map(id => {
+        const c = companies.find(co => co.id === id);
+        return c ? syncCompanyToExpress(c.id, c.name, c.managers, c.technicians) : Promise.resolve();
+      }),
+    );
+
+    revalidatePath("/dashboard/companies");
+    revalidatePath("/dashboard/managers");
     return {};
   } catch (err) {
     return { error: errMsg(err) };
