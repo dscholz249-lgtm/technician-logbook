@@ -1,4 +1,5 @@
 import { getCompanies } from "@/lib/supabase/db";
+import { getLastActiveByPhones } from "@/lib/api";
 import { AddManagerModal } from "./add-manager-modal";
 import { UsersTable } from "./users-table";
 
@@ -13,6 +14,13 @@ export default async function ManagersPage() {
     c.technicians.map(t => ({ kind: "technician" as const, ...t, companyName: c.name }))
   );
   const companyOptions = companies.map(c => ({ id: c.id, name: c.name }));
+
+  const allPhones = [
+    ...managers.map(m => m.phone),
+    ...technicians.map(t => t.phone),
+  ].filter((p): p is string => Boolean(p));
+
+  const lastActive = await getLastActiveByPhones(allPhones).catch(() => ({}));
 
   return (
     <div className="space-y-6">
@@ -31,7 +39,7 @@ export default async function ManagersPage() {
           No users yet. Add a company first.
         </div>
       ) : (
-        <UsersTable managers={managers} technicians={technicians} companies={companyOptions} />
+        <UsersTable managers={managers} technicians={technicians} companies={companyOptions} lastActive={lastActive} />
       )}
     </div>
   );

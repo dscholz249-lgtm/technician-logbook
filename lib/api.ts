@@ -93,6 +93,19 @@ export async function getGlobalAnalytics(): Promise<GlobalAnalyticsData> {
   return apiFetch<GlobalAnalyticsData>("/api/analytics/global");
 }
 
+// Returns a map of phone → ISO timestamp of last inbound message.
+export async function getLastActiveByPhones(
+  phones: string[],
+): Promise<Record<string, string>> {
+  const filtered = phones.filter(Boolean);
+  if (filtered.length === 0) return {};
+  const params = new URLSearchParams({ phones: filtered.join(",") });
+  const rows = await apiFetch<{ phone: string; last_active_at: string }[]>(
+    `/api/last-active?${params}`,
+  );
+  return Object.fromEntries(rows.map(r => [r.phone, r.last_active_at]));
+}
+
 export interface TechnicianMedia {
   id: number;
   technician_id: string | null;

@@ -161,16 +161,29 @@ function ImpersonateButton({ user }: { user: AnyUserRow }) {
   );
 }
 
+// ----------------------------------------------------------------- Last active helper
+
+function relativeTime(iso: string): string {
+  const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
+  if (days === 0) return "Today";
+  if (days === 1) return "Yesterday";
+  if (days < 30) return `${days}d ago`;
+  if (days < 365) return `${Math.floor(days / 30)}mo ago`;
+  return `${Math.floor(days / 365)}y ago`;
+}
+
 // ----------------------------------------------------------------- Table
 
 export function UsersTable({
   managers,
   technicians,
   companies,
+  lastActive,
 }: {
   managers: ManagerRow[];
   technicians: TechnicianRow[];
   companies: Company[];
+  lastActive: Record<string, string>;
 }) {
   const [companyFilter, setCompanyFilter] = useState("");
   const [roleFilter, setRoleFilter] = useState<"" | "manager" | "director" | "technician">("");
@@ -244,6 +257,7 @@ export function UsersTable({
                 <TableHead>Role</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Phone</TableHead>
+                <TableHead>Last active</TableHead>
                 <TableHead>Reminders</TableHead>
                 <TableHead></TableHead>
               </TableRow>
@@ -272,6 +286,15 @@ export function UsersTable({
                     {u.phone
                       ? <span className="text-xs font-mono">{u.phone}</span>
                       : <Badge variant="outline" className="text-[10px]">Not set</Badge>}
+                  </TableCell>
+                  <TableCell>
+                    {u.phone && lastActive[u.phone] ? (
+                      <span className="text-xs text-foreground" title={new Date(lastActive[u.phone]).toLocaleString()}>
+                        {relativeTime(lastActive[u.phone])}
+                      </span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">Never</span>
+                    )}
                   </TableCell>
                   <TableCell>
                     {u.kind === "manager" ? (
