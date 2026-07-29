@@ -5,6 +5,14 @@ import type { MessageLogEntry } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
+function normalizePhone(phone: string | null | undefined): string {
+  if (!phone) return "";
+  const digits = phone.replace(/\D/g, "");
+  if (digits.length === 10) return `+1${digits}`;
+  if (digits.length === 11 && digits.startsWith("1")) return `+${digits}`;
+  return phone;
+}
+
 export interface PhoneMeta {
   phone: string;
   name: string;
@@ -19,9 +27,10 @@ export default async function ConversationsPage() {
   const phoneMeta: PhoneMeta[] = [];
   for (const c of companies) {
     for (const m of c.managers) {
-      if (m.phone) {
+      const phone = normalizePhone(m.phone);
+      if (phone) {
         phoneMeta.push({
-          phone: m.phone,
+          phone,
           name: m.name,
           kind: "manager",
           companyId: c.id,
@@ -30,9 +39,10 @@ export default async function ConversationsPage() {
       }
     }
     for (const t of c.technicians) {
-      if (t.phone) {
+      const phone = normalizePhone(t.phone);
+      if (phone) {
         phoneMeta.push({
-          phone: t.phone,
+          phone,
           name: t.name,
           kind: "technician",
           companyId: c.id,
