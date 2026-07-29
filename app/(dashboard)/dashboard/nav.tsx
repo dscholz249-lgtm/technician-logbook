@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { InboxIcon, BookOpenIcon, BuildingIcon, UsersIcon, HelpCircleIcon, BarChart2Icon, SirenIcon, StarIcon } from "lucide-react";
+import { InboxIcon, BookOpenIcon, BuildingIcon, UsersIcon, HelpCircleIcon, BarChart2Icon, SirenIcon, StarIcon, MessageSquareIcon } from "lucide-react";
 
 const NAV = [
   {
@@ -18,6 +18,7 @@ const NAV = [
       { href: "/dashboard/companies", label: "Companies", icon: BuildingIcon },
       { href: "/dashboard/managers", label: "Users", icon: UsersIcon },
       { href: "/dashboard/analytics", label: "Analytics", icon: BarChart2Icon },
+      { href: "/dashboard/conversations", label: "Conversations", icon: MessageSquareIcon },
       { href: "/dashboard/urgent-requests", label: "Urgent Requests", icon: SirenIcon },
       { href: "/dashboard/interest", label: "Interest Requests", icon: StarIcon },
     ],

@@ -1,6 +1,6 @@
 import "server-only";
 import { env } from "./env";
-import type { QueueItem, LogbookEntry } from "./types";
+import type { QueueItem, LogbookEntry, MessageLogEntry } from "./types";
 
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const url = `${env.EXPRESS_API_URL}${path}`;
@@ -134,6 +134,23 @@ export async function markActioned(
   note?: string,
 ): Promise<void> {
   await apiFetch<unknown>(`/api/queue/${id}/action`, {
+    method: "POST",
+    body: JSON.stringify({ actioned_by: actionedBy, note: note ?? "" }),
+  });
+}
+
+export async function getConversations(phones: string[]): Promise<MessageLogEntry[]> {
+  if (phones.length === 0) return [];
+  const params = new URLSearchParams({ phones: phones.join(",") });
+  return apiFetch<MessageLogEntry[]>(`/api/conversations?${params}`);
+}
+
+export async function markIgnored(
+  id: number,
+  actionedBy: string,
+  note?: string,
+): Promise<void> {
+  await apiFetch<unknown>(`/api/queue/${id}/ignore`, {
     method: "POST",
     body: JSON.stringify({ actioned_by: actionedBy, note: note ?? "" }),
   });

@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import type { QueueItem, AssignTrainingPayload, AddEmployeePayload } from "@/lib/types";
-import { actionQueueItem } from "./actions";
+import { actionQueueItem, ignoreQueueItem } from "./actions";
 import {
   Table,
   TableHeader,
@@ -101,7 +101,20 @@ function ActionDialog({
       if (result.error) {
         toast.error(result.error);
       } else {
-        toast.success("Marked as actioned");
+        toast.success("Marked as actioned — SMS sent");
+        onOpenChange(false);
+        setNote("");
+      }
+    });
+  }
+
+  function ignore() {
+    startTransition(async () => {
+      const result = await ignoreQueueItem(item.id, note);
+      if (result.error) {
+        toast.error(result.error);
+      } else {
+        toast.success("Ignored — no SMS sent");
         onOpenChange(false);
         setNote("");
       }
@@ -112,7 +125,7 @@ function ActionDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Mark as actioned</DialogTitle>
+          <DialogTitle>Resolve request</DialogTitle>
         </DialogHeader>
         <div className="space-y-1 text-sm">
           <PayloadSummary type={item.type} raw={item.payload} />
@@ -122,13 +135,16 @@ function ActionDialog({
           <Label htmlFor="note">Note (optional)</Label>
           <Textarea
             id="note"
-            placeholder="What did you do to action this?"
+            placeholder="What did you do? (applies to either action)"
             value={note}
             onChange={(e) => setNote(e.target.value)}
             className="min-h-20"
           />
         </div>
         <DialogFooter showCloseButton>
+          <Button variant="ghost" onClick={ignore} disabled={pending} className="mr-auto">
+            Ignore (no SMS)
+          </Button>
           <Button onClick={submit} disabled={pending}>
             {pending ? "Saving…" : "Mark actioned"}
           </Button>

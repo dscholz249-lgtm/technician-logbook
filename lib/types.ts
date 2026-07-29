@@ -1,5 +1,5 @@
 export type ActionType = "assign_training" | "add_employee";
-export type ActionStatus = "pending" | "actioned" | "failed";
+export type ActionStatus = "pending" | "actioned" | "ignored" | "failed";
 
 export interface QueueItem {
   id: number;
@@ -24,6 +24,15 @@ export interface LogbookEntry {
   tags: string; // JSON array — parse at render
   source_message_id: number;
   created_at: number;
+}
+
+export interface MessageLogEntry {
+  id: number;
+  manager_phone: string;
+  direction: "in" | "out";
+  body: string | null;
+  step_after: string | null;
+  created_at: string; // ISO text
 }
 
 // Parsed payload shapes from the NLP layer

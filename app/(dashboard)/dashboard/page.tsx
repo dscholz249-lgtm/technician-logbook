@@ -109,7 +109,7 @@ export default async function DashboardPage() {
 
   const groups = buildGroups(queue, logbook, companies);
   const pending = queue.filter(q => q.status === "pending");
-  const actionedToday = queue.filter(q => q.status === "actioned" && q.actioned_at && isToday(q.actioned_at));
+  const actionedToday = queue.filter(q => (q.status === "actioned" || q.status === "ignored") && q.actioned_at && isToday(q.actioned_at));
 
   return (
     <div className="space-y-6">

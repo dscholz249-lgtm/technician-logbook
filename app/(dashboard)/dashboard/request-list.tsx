@@ -2,7 +2,7 @@
 
 import { useTransition } from "react";
 import { toast } from "sonner";
-import { actionQueueItem } from "./actions";
+import { actionQueueItem, ignoreQueueItem } from "./actions";
 import { Button } from "@/components/ui/button";
 import { ChevronDownIcon } from "lucide-react";
 import type { CompanyGroup, UnifiedItem } from "./page";
@@ -50,21 +50,40 @@ function Initials({ name }: { name: string }) {
   );
 }
 
-function MarkCompleteButton({ item }: { item: QueueItem }) {
+function RequestActions({ item }: { item: QueueItem }) {
   const [pending, startTransition] = useTransition();
 
-  function handle() {
+  function handleComplete() {
     startTransition(async () => {
       const result = await actionQueueItem(item.id);
       if (result.error) toast.error(result.error);
-      else toast.success("Marked complete");
+      else toast.success("Marked complete — SMS sent");
+    });
+  }
+
+  function handleIgnore() {
+    startTransition(async () => {
+      const result = await ignoreQueueItem(item.id);
+      if (result.error) toast.error(result.error);
+      else toast.success("Ignored — no SMS sent");
     });
   }
 
   return (
-    <Button size="sm" onClick={handle} disabled={pending}>
-      {pending ? "Saving…" : "Mark Complete"}
-    </Button>
+    <div className="flex items-center gap-1.5 shrink-0">
+      <Button
+        size="sm"
+        variant="ghost"
+        onClick={handleIgnore}
+        disabled={pending}
+        className="text-muted-foreground text-xs px-2"
+      >
+        Ignore
+      </Button>
+      <Button size="sm" onClick={handleComplete} disabled={pending}>
+        {pending ? "Saving…" : "Mark Complete"}
+      </Button>
+    </div>
   );
 }
 
@@ -94,7 +113,7 @@ function RequestRow({ item }: { item: UnifiedItem }) {
       </div>
       <div className="shrink-0">
         {isPending
-          ? <MarkCompleteButton item={item.data as QueueItem} />
+          ? <RequestActions item={item.data as QueueItem} />
           : <span className="text-xs text-muted-foreground">No action needed</span>}
       </div>
     </div>
