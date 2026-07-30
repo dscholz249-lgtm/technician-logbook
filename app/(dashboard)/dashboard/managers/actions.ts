@@ -17,6 +17,30 @@ async function requireAdmin(): Promise<void> {
   }
 }
 
+export async function getInviteEmailPreview(
+  managerId: string,
+): Promise<{ error?: string; html?: string; firstName?: string; email?: string }> {
+  await requireAdmin();
+
+  const companies = await getCompanies().catch(() => []);
+  const company = companies.find(c => c.managers.some(m => m.id === managerId));
+  const manager = company?.managers.find(m => m.id === managerId);
+
+  if (!manager || !company) return { error: "Manager not found." };
+  if (!manager.email) return { error: "Manager has no email address on file." };
+
+  const firstName = manager.name.split(/\s+/)[0];
+  const html = buildInviteEmail({
+    firstName,
+    companyName: company.name,
+    loginLink: "#preview",
+    preferencesLink: `${env.PUBLIC_ORIGIN}/manager`,
+    origin: env.PUBLIC_ORIGIN,
+  });
+
+  return { html, firstName, email: manager.email };
+}
+
 export async function sendManagerInvite(
   managerId: string,
 ): Promise<{ error?: string; sent?: boolean }> {
