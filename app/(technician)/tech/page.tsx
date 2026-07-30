@@ -3,6 +3,8 @@ import { getTechnicianByEmail } from "@/lib/supabase/db";
 import { getLogbook, getTechnicianMedia } from "@/lib/api";
 import { AutoRefresh } from "@/components/auto-refresh";
 import { TechPhoneForm } from "./tech-phone-form";
+import { PhoneRequiredModal } from "@/components/phone-required-modal";
+import { saveTechPhone } from "./actions";
 import { ContactCardSection } from "@/app/(manager)/manager/contact-card-section";
 import { CameraIcon, MessageSquareIcon, PhoneIcon } from "lucide-react";
 import { cookies } from "next/headers";
@@ -70,6 +72,12 @@ export default async function TechPortalPage() {
 
   return (
     <div className="space-y-6">
+      <PhoneRequiredModal
+        currentPhone={technician.phone}
+        smsNumber={SKILLCAT_SMS_NUMBER}
+        action={saveTechPhone}
+      />
+
       {/* Profile header */}
       <div>
         <h1 className="text-xl font-semibold">{technician.name}</h1>

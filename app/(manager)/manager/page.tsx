@@ -4,6 +4,8 @@ import { createClient } from "@/lib/supabase/server";
 import { getManagerByEmail, getCompanies } from "@/lib/supabase/db";
 import { getQueue, getLogbook } from "@/lib/api";
 import { PhoneForm } from "./phone-form";
+import { PhoneRequiredModal } from "@/components/phone-required-modal";
+import { savePhone } from "./actions";
 import { ReminderForm } from "./reminder-form";
 import { TechLog } from "./tech-log";
 import { DirectorAddManager } from "./director-add-manager";
@@ -138,6 +140,12 @@ export default async function ManagerPage() {
 
   return (
     <div className="space-y-6">
+      <PhoneRequiredModal
+        currentPhone={manager.phone}
+        smsNumber={SKILLCAT_SMS_NUMBER}
+        action={savePhone}
+      />
+
       {/* Company + manager info */}
       <div className="flex items-start justify-between">
         <div>
