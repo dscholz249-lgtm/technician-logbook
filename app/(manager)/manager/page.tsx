@@ -11,6 +11,7 @@ import { TechLog } from "./tech-log";
 import { DirectorAddManager } from "./director-add-manager";
 import { ContactCardSection } from "./contact-card-section";
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "@/components/ui/table";
+import { TechInviteButton } from "@/components/tech-invite-button";
 import type { QueueItem, LogbookEntry } from "@/lib/types";
 import type { Technician } from "@/lib/supabase/db";
 
@@ -97,12 +98,15 @@ function TechnicianTable({ technicians }: { technicians: Technician[] }) {
                   <TableCell className="text-sm text-muted-foreground">{t.title ?? "—"}</TableCell>
                   <TableCell className="text-xs text-muted-foreground">{t.email ?? "—"}</TableCell>
                   <TableCell className="text-right">
-                    <Link
-                      href={`/manager/technician/${t.id}`}
-                      className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      View Logs →
-                    </Link>
+                    <div className="flex items-center justify-end gap-2">
+                      {t.email && <TechInviteButton technicianId={t.id} technicianName={t.name} />}
+                      <Link
+                        href={`/manager/technician/${t.id}`}
+                        className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        View Logs →
+                      </Link>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}

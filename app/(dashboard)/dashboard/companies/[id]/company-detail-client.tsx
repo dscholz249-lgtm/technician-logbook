@@ -13,6 +13,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import { PencilIcon, PlusIcon, Trash2Icon } from "lucide-react";
+import { TechInviteButton } from "@/components/tech-invite-button";
 
 // ----------------------------------------------------------------- Company info
 
@@ -329,6 +330,7 @@ export function TechniciansSection({ company }: { company: CompanyWithRelations 
                 <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground">Name</th>
                 <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground">Email</th>
                 <th className="text-left px-4 py-2.5 text-xs font-medium text-muted-foreground">Title</th>
+                <th />
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -337,6 +339,9 @@ export function TechniciansSection({ company }: { company: CompanyWithRelations 
                   <td className="px-4 py-2.5 font-medium">{t.name}</td>
                   <td className="px-4 py-2.5 text-muted-foreground">{t.email ?? "—"}</td>
                   <td className="px-4 py-2.5 text-muted-foreground">{t.title ?? "—"}</td>
+                  <td className="px-4 py-2.5 text-right">
+                    {t.email && <TechInviteButton technicianId={t.id} technicianName={t.name} />}
+                  </td>
                 </tr>
               ))}
             </tbody>
