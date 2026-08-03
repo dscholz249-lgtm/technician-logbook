@@ -11,7 +11,7 @@ import { TechLog } from "./tech-log";
 import { DirectorAddManager } from "./director-add-manager";
 import { ContactCardSection } from "./contact-card-section";
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "@/components/ui/table";
-import { TechInviteButton } from "@/components/tech-invite-button";
+import { TechInviteButton, InviteAllTechsButton } from "@/components/tech-invite-button";
 import type { QueueItem, LogbookEntry } from "@/lib/types";
 import type { Technician } from "@/lib/supabase/db";
 
@@ -61,7 +61,8 @@ function buildTechGroups(queue: QueueItem[], logbook: LogbookEntry[]) {
     .sort((a, b) => b.items[0].data.created_at - a.items[0].data.created_at);
 }
 
-function TechnicianTable({ technicians }: { technicians: Technician[] }) {
+function TechnicianTable({ technicians, companyId }: { technicians: Technician[]; companyId: string }) {
+  const eligibleCount = technicians.filter(t => !!t.email).length;
   return (
     <div>
       <div className="flex items-center justify-between mb-3">
@@ -71,6 +72,7 @@ function TechnicianTable({ technicians }: { technicians: Technician[] }) {
             {technicians.length} in company
           </span>
         </h2>
+        <InviteAllTechsButton companyId={companyId} eligibleCount={eligibleCount} />
       </div>
       {technicians.length === 0 ? (
         <div className="rounded-xl border border-border bg-card py-8 text-center text-sm text-muted-foreground">
@@ -227,7 +229,7 @@ export default async function ManagerPage() {
       </div>
 
       {/* All technicians */}
-      <TechnicianTable technicians={technicians} />
+      <TechnicianTable technicians={technicians} companyId={manager.company_id} />
       <AutoRefresh intervalMs={20000} />
     </div>
   );

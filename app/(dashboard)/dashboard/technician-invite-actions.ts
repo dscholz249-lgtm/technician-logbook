@@ -123,3 +123,78 @@ export async function sendTechnicianInvite(
 
   return { sent: true };
 }
+
+export async function sendAllTechnicianInvites(
+  companyId: string,
+): Promise<{ error?: string; sent: number; failed: number }> {
+  const caller = await getCallerInfo().catch(e => ({ error: (e as Error).message }));
+  if ("error" in caller) return { ...(caller as { error: string }), sent: 0, failed: 0 };
+
+  const resendKey = env.RESEND_API_KEY;
+  if (!resendKey) return { error: "RESEND_API_KEY is not configured.", sent: 0, failed: 0 };
+
+  if (!caller.isAdmin) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    const manager = await getManagerByEmail(user!.email!);
+    if (manager?.company_id !== companyId) {
+      return { error: "Not authorized to invite technicians at this company.", sent: 0, failed: 0 };
+    }
+  }
+
+  const companies = await getCompanies().catch(() => []);
+  const company = companies.find(c => c.id === companyId);
+  if (!company) return { error: "Company not found.", sent: 0, failed: 0 };
+
+  const eligible = company.technicians.filter(t => !!t.email);
+  if (eligible.length === 0) return { sent: 0, failed: 0 };
+
+  const adminClient = createAdminClient();
+  const resend = new Resend(resendKey);
+  let sent = 0;
+  let failed = 0;
+
+  for (const technician of eligible) {
+    try {
+      const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
+        type: "magiclink",
+        email: technician.email!,
+        options: { redirectTo: `${env.PUBLIC_ORIGIN}/auth/confirm` },
+      });
+
+      if (linkError || !linkData?.properties?.action_link) { failed++; continue; }
+
+      const firstName = technician.name.split(/\s+/)[0];
+      const html = buildTechInviteEmail({
+        firstName,
+        companyName: company.name,
+        managerName: caller.name,
+        loginLink: linkData.properties.action_link,
+        preferencesLink: `${env.PUBLIC_ORIGIN}/tech`,
+        smsNumber: SKILLCAT_SMS_NUMBER,
+      });
+
+      const { error: sendError } = await resend.emails.send({
+        from: "SkillCat Labs <logbook@tryskillcat.com>",
+        to: technician.email!,
+        subject: `${company.name} has added you to SkillCat Labs`,
+        html,
+      });
+
+      if (sendError) { failed++; continue; }
+
+      await capture(technician.email!, "tech_invite_sent", {
+        company_id: company.id,
+        company_name: company.name,
+        sent_by: caller.email,
+        batch: true,
+      });
+
+      sent++;
+    } catch {
+      failed++;
+    }
+  }
+
+  return { sent, failed };
+}
