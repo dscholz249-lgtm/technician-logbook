@@ -10,6 +10,7 @@ import { ReminderForm } from "./reminder-form";
 import { TechLog } from "./tech-log";
 import { DirectorAddManager } from "./director-add-manager";
 import { ContactCardSection } from "./contact-card-section";
+import { RequestHelpButton } from "./request-help-button";
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "@/components/ui/table";
 import { TechInviteButton, InviteAllTechsButton } from "@/components/tech-invite-button";
 import type { QueueItem, LogbookEntry } from "@/lib/types";
@@ -142,7 +143,6 @@ export default async function ManagerPage() {
 
   const techGroups = buildTechGroups(queue, logbook);
   const technicians = company?.technicians ?? [];
-  const totalLogs = queue.length + logbook.length;
 
   return (
     <div className="space-y-6">
@@ -164,15 +164,18 @@ export default async function ManagerPage() {
         {isDirector && <DirectorAddManager />}
       </div>
 
-      {/* SMS features + settings */}
-      <div className="grid grid-cols-1 gap-4 items-start md:grid-cols-2">
-        {/* Left: how it works */}
+      {/* How To */}
+      <section className="space-y-2">
+        <h2 className="text-sm font-semibold">How To</h2>
         <div className="rounded-xl border border-border bg-card px-5 py-4 space-y-4">
-          <div>
-            <p className="text-sm font-semibold">Send updates by text</p>
-            <p className="text-sm text-muted-foreground mt-0.5">
-              Text <span className="font-mono font-medium text-foreground">{SKILLCAT_SMS_NUMBER}</span>
-            </p>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-sm font-semibold">Send updates by text</p>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                Text <span className="font-mono font-medium text-foreground">{SKILLCAT_SMS_NUMBER}</span>
+              </p>
+            </div>
+            <RequestHelpButton variant="button" />
           </div>
           <div className="space-y-3">
             {[
@@ -203,9 +206,12 @@ export default async function ManagerPage() {
           </div>
           {process.env.SKILLCAT_SMS_PHONE && <ContactCardSection />}
         </div>
+      </section>
 
-        {/* Right: phone + reminders */}
-        <div className="space-y-3">
+      {/* Settings */}
+      <section className="space-y-2">
+        <h2 className="text-sm font-semibold">Settings</h2>
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
           <div className="rounded-xl border border-border bg-card px-4 py-3">
             <PhoneForm currentPhone={manager.phone} />
           </div>
@@ -213,23 +219,18 @@ export default async function ManagerPage() {
             <ReminderForm current={manager.reminder_preference ?? "never"} />
           </div>
         </div>
-      </div>
-
-      {/* Today's logs */}
-      <div>
-        <div className="flex items-center gap-2 mb-3">
-          <h2 className="text-sm font-semibold">
-            {isDirector ? "Company Logs" : "My Logs"}
-          </h2>
-          <span className="text-xs text-muted-foreground">
-            {totalLogs} {totalLogs === 1 ? "entry" : "entries"} · {techGroups.length} {techGroups.length === 1 ? "technician" : "technicians"}
-          </span>
-        </div>
-        <TechLog groups={techGroups} />
-      </div>
+      </section>
 
       {/* All technicians */}
       <TechnicianTable technicians={technicians} companyId={manager.company_id} />
+
+      {/* Logs — collapsed on load */}
+      <TechLog
+        groups={techGroups}
+        label={isDirector ? "Company Logs" : "My Logs"}
+        initialCollapsed
+      />
+
       <AutoRefresh intervalMs={20000} />
     </div>
   );

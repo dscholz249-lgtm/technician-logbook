@@ -141,20 +141,48 @@ function TechRow({ group }: { group: TechGroup }) {
   );
 }
 
-export function TechLog({ groups }: { groups: TechGroup[] }) {
-  if (groups.length === 0) {
-    return (
-      <div className="rounded-xl border border-border bg-card py-12 text-center text-sm text-muted-foreground">
-        No activity yet. Text {" "}
-        <span className="font-mono text-foreground">(251) 313-5407</span>
-        {" "}to log your first update.
-      </div>
-    );
-  }
+export function TechLog({
+  groups,
+  label,
+  initialCollapsed = false,
+}: {
+  groups: TechGroup[];
+  label: string;
+  initialCollapsed?: boolean;
+}) {
+  const [collapsed, setCollapsed] = useState(initialCollapsed);
+  const totalEntries = groups.reduce((s, g) => s + g.items.length, 0);
 
   return (
-    <div className="rounded-xl border border-border bg-card overflow-hidden">
-      {groups.map(g => <TechRow key={g.name} group={g} />)}
+    <div>
+      <button
+        onClick={() => setCollapsed(o => !o)}
+        className="w-full flex items-center gap-2 mb-3 text-left group"
+      >
+        <h2 className="text-sm font-semibold">{label}</h2>
+        <span className="text-xs text-muted-foreground">
+          {totalEntries} {totalEntries === 1 ? "entry" : "entries"} · {groups.length} {groups.length === 1 ? "technician" : "technicians"}
+        </span>
+        <span className="ml-auto text-muted-foreground group-hover:text-foreground transition-colors">
+          {collapsed
+            ? <ChevronRightIcon className="size-4" />
+            : <ChevronDownIcon className="size-4" />}
+        </span>
+      </button>
+
+      {!collapsed && (
+        groups.length === 0 ? (
+          <div className="rounded-xl border border-border bg-card py-12 text-center text-sm text-muted-foreground">
+            No activity yet. Text{" "}
+            <span className="font-mono text-foreground">(251) 313-5407</span>
+            {" "}to log your first update.
+          </div>
+        ) : (
+          <div className="rounded-xl border border-border bg-card overflow-hidden">
+            {groups.map(g => <TechRow key={g.name} group={g} />)}
+          </div>
+        )
+      )}
     </div>
   );
 }

@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { LifeBuoyIcon } from "lucide-react";
 
-export function RequestHelpButton() {
+export function RequestHelpButton({ variant = "link" }: { variant?: "link" | "button" }) {
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [pending, startTransition] = useTransition();
@@ -30,15 +30,24 @@ export function RequestHelpButton() {
     });
   }
 
+  const trigger = variant === "button" ? (
+    <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
+      <LifeBuoyIcon className="size-3.5 mr-1.5" />
+      Need Help?
+    </Button>
+  ) : (
+    <button
+      onClick={() => setOpen(true)}
+      className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
+    >
+      <LifeBuoyIcon className="size-3.5" />
+      Request help
+    </button>
+  );
+
   return (
     <>
-      <button
-        onClick={() => setOpen(true)}
-        className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
-      >
-        <LifeBuoyIcon className="size-3.5" />
-        Request help
-      </button>
+      {trigger}
 
       <Dialog open={open} onOpenChange={o => { if (!o) setOpen(false); }}>
         <DialogContent className="sm:max-w-md">
