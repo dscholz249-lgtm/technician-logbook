@@ -228,7 +228,6 @@ export default async function ManagerPage() {
       <TechLog
         groups={techGroups}
         label={isDirector ? "Company Logs" : "My Logs"}
-        initialCollapsed
       />
 
       <AutoRefresh intervalMs={20000} />

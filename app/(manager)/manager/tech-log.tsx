@@ -55,7 +55,7 @@ interface TechGroup {
 }
 
 function TechRow({ group }: { group: TechGroup }) {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
 
   return (
     <div className="border-b border-border/60 last:border-0">
