@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { ChevronDownIcon, ChevronRightIcon, MessageSquareIcon } from "lucide-react";
-import type { LogItem } from "./page";
+import type { LogItem } from "./technicians/page";
 
 function Initials({ name }: { name: string }) {
   const parts = name.trim().split(/\s+/);

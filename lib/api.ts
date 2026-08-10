@@ -42,6 +42,11 @@ export async function getLogbook(companyId?: string, managerPhone?: string, tech
   return apiFetch<LogbookEntry[]>(`/api/logbook${qs}`);
 }
 
+export async function getManagerOwnLogbook(companyId: string, managerPhone: string): Promise<LogbookEntry[]> {
+  const params = new URLSearchParams({ company_id: companyId, manager_phone: managerPhone, self: "1" });
+  return apiFetch<LogbookEntry[]>(`/api/logbook?${params}`);
+}
+
 export interface DayMetric { date: string; inbound: number; outbound: number }
 export interface TypeMetric { type: string; total: number; actioned: number }
 export interface RetentionData {

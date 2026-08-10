@@ -2,235 +2,95 @@ import Link from "next/link";
 import { AutoRefresh } from "@/components/auto-refresh";
 import { createClient } from "@/lib/supabase/server";
 import { getManagerByEmail, getCompanies } from "@/lib/supabase/db";
-import { getQueue, getLogbook } from "@/lib/api";
-import { PhoneForm } from "./phone-form";
-import { PhoneRequiredModal } from "@/components/phone-required-modal";
-import { savePhone } from "./actions";
-import { ReminderForm } from "./reminder-form";
-import { TechLog } from "./tech-log";
-import { DirectorAddManager } from "./director-add-manager";
-import { ContactCardSection } from "./contact-card-section";
-import { RequestHelpButton } from "./request-help-button";
-import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "@/components/ui/table";
-import { TechInviteButton, InviteAllTechsButton } from "@/components/tech-invite-button";
-import type { QueueItem, LogbookEntry } from "@/lib/types";
-import type { Technician } from "@/lib/supabase/db";
+import { getManagerOwnLogbook } from "@/lib/api";
+import { LogbookGrid } from "./logbook-card";
+import { BookOpenIcon, MessageSquareIcon } from "lucide-react";
+import { cookies } from "next/headers";
+import { env } from "@/lib/env";
+import type { ImpersonateCookie } from "@/app/(dashboard)/dashboard/managers/impersonate-actions";
 
 export const dynamic = "force-dynamic";
 
 const SKILLCAT_SMS_NUMBER = (process.env.SKILLCAT_SMS_PHONE ?? "(251) 313-5407").replace(/^["']|["']$/g, "");
 
-export type LogItem =
-  | { kind: "assignment"; data: QueueItem; techName: string }
-  | { kind: "note"; data: LogbookEntry; techName: string };
-
-function parsePayload(raw: string): Record<string, unknown> {
-  try { return JSON.parse(raw); } catch { return {}; }
-}
-
-function buildTechGroups(queue: QueueItem[], logbook: LogbookEntry[]) {
-  const groups = new Map<string, LogItem[]>();
-
-  function add(name: string, item: LogItem) {
-    const key = name.toLowerCase().trim();
-    if (!groups.has(key)) groups.set(key, []);
-    groups.get(key)!.push(item);
-  }
-
-  for (const q of queue) {
-    const p = parsePayload(q.payload);
-    const name = q.type === "assign_training"
-      ? String(p.employee_name ?? "Unknown")
-      : q.type === "add_employee"
-        ? String(p.name ?? "Unknown")
-        : "Unknown";
-    add(name, { kind: "assignment", data: q, techName: name });
-  }
-
-  for (const e of logbook) {
-    const name = e.employee_name_raw || "Unknown";
-    add(name, { kind: "note", data: e, techName: name });
-  }
-
-  return Array.from(groups.entries())
-    .map(([, items]) => ({
-      name: items[0].techName,
-      items: items.sort((a, b) => b.data.created_at - a.data.created_at),
-      assignmentCount: items.filter(i => i.kind === "assignment").length,
-      noteCount: items.filter(i => i.kind === "note").length,
-    }))
-    .sort((a, b) => b.items[0].data.created_at - a.items[0].data.created_at);
-}
-
-function TechnicianTable({ technicians, companyId }: { technicians: Technician[]; companyId: string }) {
-  const eligibleCount = technicians.filter(t => !!t.email).length;
-  return (
-    <div>
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="text-sm font-semibold">
-          All Technicians
-          <span className="ml-2 text-xs font-normal text-muted-foreground">
-            {technicians.length} in company
-          </span>
-        </h2>
-        <InviteAllTechsButton companyId={companyId} eligibleCount={eligibleCount} />
-      </div>
-      {technicians.length === 0 ? (
-        <div className="rounded-xl border border-border bg-card py-8 text-center text-sm text-muted-foreground">
-          No technicians on file. Contact your SkillCat administrator.
-        </div>
-      ) : (
-        <div className="rounded-xl border border-border overflow-hidden">
-          <Table>
-            <TableHeader>
-              <TableRow className="hover:bg-transparent">
-                <TableHead>Technician</TableHead>
-                <TableHead>Title</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {technicians.map(t => (
-                <TableRow key={t.id} className="hover:bg-muted/30 transition-colors">
-                  <TableCell className="font-medium text-sm">
-                    <Link href={`/manager/technician/${t.id}`} className="hover:underline">
-                      {t.name}
-                    </Link>
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{t.title ?? "—"}</TableCell>
-                  <TableCell className="text-xs text-muted-foreground">{t.email ?? "—"}</TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      {t.email && <TechInviteButton technicianId={t.id} technicianName={t.name} />}
-                      <Link
-                        href={`/manager/technician/${t.id}`}
-                        className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-                      >
-                        View Logs →
-                      </Link>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      )}
-    </div>
-  );
-}
-
-export default async function ManagerPage() {
+export default async function ManagerHomePage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  const manager = await getManagerByEmail(user!.email!);
-  if (!manager) return null;
+  const isAdmin = env.ADMIN_EMAILS.includes((user?.email ?? "").toLowerCase());
+  const jar = await cookies();
+  const impersonateCookie = jar.get("skillcat_impersonate");
+  let effectiveEmail = user!.email!;
+  if (isAdmin && impersonateCookie?.value) {
+    try {
+      const imp = JSON.parse(impersonateCookie.value) as ImpersonateCookie;
+      effectiveEmail = imp.email;
+    } catch {}
+  }
 
-  const isDirector = manager.role === "director";
+  const manager = await getManagerByEmail(effectiveEmail);
+  if (!manager) return null;
 
   const companies = await getCompanies().catch(() => []);
   const company = companies.find(c => c.id === manager.company_id);
 
-  // Directors see all company activity; managers see only their own.
-  const phoneFilter = isDirector ? undefined : (manager.phone ?? undefined);
+  const ownEntries = manager.phone
+    ? await getManagerOwnLogbook(manager.company_id, manager.phone).catch(() => [])
+    : [];
 
-  const [queue, logbook] = await Promise.all([
-    getQueue(undefined, manager.company_id, phoneFilter).catch(() => [] as QueueItem[]),
-    getLogbook(manager.company_id, phoneFilter).catch(() => [] as LogbookEntry[]),
-  ]);
-
-  const techGroups = buildTechGroups(queue, logbook);
-  const technicians = company?.technicians ?? [];
+  const preview = ownEntries.slice(0, 4);
 
   return (
-    <div className="space-y-6">
-      <PhoneRequiredModal
-        currentPhone={manager.phone}
-        smsNumber={SKILLCAT_SMS_NUMBER}
-        action={savePhone}
-      />
-
-      {/* Company + manager info */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-xl font-semibold">{company?.name ?? "Your Company"}</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            {manager.name}
-            <span className="ml-1.5 text-xs bg-muted px-1.5 py-0.5 rounded capitalize">{manager.role}</span>
-          </p>
-        </div>
-        {isDirector && <DirectorAddManager />}
+    <div className="space-y-8">
+      {/* Page header */}
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">
+          {company?.name ?? "Your Company"}
+        </p>
+        <h1 className="text-2xl font-bold tracking-tight">Home</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          {manager.name}
+          <span className="ml-2 text-xs bg-muted px-1.5 py-0.5 rounded capitalize">{manager.role}</span>
+        </p>
       </div>
 
-      {/* How To */}
-      <section className="space-y-2">
-        <h2 className="text-sm font-semibold">How To</h2>
-        <div className="rounded-xl border border-border bg-card px-5 py-4 space-y-4">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-sm font-semibold">Send updates by text</p>
-              <p className="text-sm text-muted-foreground mt-0.5">
-                Text <span className="font-mono font-medium text-foreground">{SKILLCAT_SMS_NUMBER}</span>
-              </p>
-            </div>
-            <RequestHelpButton variant="button" />
+      {/* Logbook section */}
+      <div>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <BookOpenIcon className="size-4 text-muted-foreground" />
+            <h2 className="text-sm font-semibold">My Logbook</h2>
+            <span className="text-xs text-muted-foreground">
+              {ownEntries.length} {ownEntries.length === 1 ? "entry" : "entries"}
+            </span>
           </div>
-          <div className="space-y-3">
-            {[
-              {
-                n: "01",
-                title: "Lookup and assign courses",
-                body: "Just let us know who you want to assign and which course. Don't know which course? Just ask.",
-              },
-              {
-                n: "02",
-                title: "Add new technicians",
-                body: "Tell us the new tech's name and email and we'll add them to your roster.",
-              },
-              {
-                n: "03",
-                title: "Leave a note",
-                body: "Flag anything about a technician and we'll save it to their record in your dashboard.",
-              },
-            ].map(f => (
-              <div key={f.n} className="flex gap-3">
-                <span className="text-xs font-bold text-skillcat-orange mt-0.5 shrink-0 w-5">{f.n}</span>
-                <div>
-                  <p className="text-xs font-semibold text-foreground">{f.title}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{f.body}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-          {process.env.SKILLCAT_SMS_PHONE && <ContactCardSection />}
+          <Link href="/manager/logbook" className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+            View all →
+          </Link>
         </div>
-      </section>
 
-      {/* Settings */}
-      <section className="space-y-2">
-        <h2 className="text-sm font-semibold">Settings</h2>
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-          <div className="rounded-xl border border-border bg-card px-4 py-3">
-            <PhoneForm currentPhone={manager.phone} />
+        {/* Composer callout */}
+        <div className="rounded-xl border border-dashed border-border bg-card px-5 py-4 flex items-center gap-4 mb-5">
+          <div className="size-10 rounded-xl bg-skillcat-orange/10 flex items-center justify-center shrink-0">
+            <MessageSquareIcon className="size-5 text-skillcat-orange" />
           </div>
-          <div className="rounded-xl border border-border bg-card px-4 py-3">
-            <ReminderForm current={manager.reminder_preference ?? "never"} />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold">Log it from the field</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Text a photo or note to{" "}
+              <span className="font-mono text-foreground">{SKILLCAT_SMS_NUMBER}</span>
+              {" "}— it lands here. No app needed.
+            </p>
           </div>
+          <Link href="/manager/how-to" className="text-xs text-muted-foreground hover:text-foreground transition-colors shrink-0">
+            How it works →
+          </Link>
         </div>
-      </section>
 
-      {/* All technicians */}
-      <TechnicianTable technicians={technicians} companyId={manager.company_id} />
+        <LogbookGrid entries={preview} />
+      </div>
 
-      {/* Logs — collapsed on load */}
-      <TechLog
-        groups={techGroups}
-        label={isDirector ? "Company Logs" : "My Logs"}
-      />
-
-      <AutoRefresh intervalMs={20000} />
+      <AutoRefresh intervalMs={30000} />
     </div>
   );
 }
