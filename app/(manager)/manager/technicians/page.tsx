@@ -2,7 +2,8 @@ import Link from "next/link";
 import { AutoRefresh } from "@/components/auto-refresh";
 import { createClient } from "@/lib/supabase/server";
 import { getManagerByEmail, getCompanies } from "@/lib/supabase/db";
-import { getQueue, getLogbook } from "@/lib/api";
+import { getQueue, getLogbook, getAlerts } from "@/lib/api";
+import type { Alert } from "@/lib/api";
 import { TechLog } from "../tech-log";
 import { TechInviteButton, InviteAllTechsButton } from "@/components/tech-invite-button";
 import { DirectorAddManager } from "../director-add-manager";
@@ -56,6 +57,23 @@ function buildTechGroups(queue: QueueItem[], logbook: LogbookEntry[]) {
       noteCount: items.filter(i => i.kind === "note").length,
     }))
     .sort((a, b) => b.items[0].data.created_at - a.items[0].data.created_at);
+}
+
+function SecurityAlerts({ alerts }: { alerts: Alert[] }) {
+  if (alerts.length === 0) return null;
+  return (
+    <div className="rounded-xl border border-destructive/40 bg-destructive/5 px-5 py-4 space-y-3">
+      <p className="text-xs font-semibold uppercase tracking-widest text-destructive">
+        Security Alerts
+      </p>
+      {alerts.map(alert => (
+        <div key={alert.id} className="text-sm">
+          <p className="font-medium text-foreground">{alert.title}</p>
+          <p className="text-muted-foreground mt-0.5">{alert.body}</p>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 function TechnicianTable({ technicians, companyId }: { technicians: Technician[]; companyId: string }) {
@@ -141,9 +159,10 @@ export default async function TechniciansPage() {
 
   const phoneFilter = isDirector ? undefined : (manager.phone ?? undefined);
 
-  const [queue, logbook] = await Promise.all([
+  const [queue, logbook, alerts] = await Promise.all([
     getQueue(undefined, manager.company_id, phoneFilter).catch(() => [] as QueueItem[]),
     getLogbook(manager.company_id, phoneFilter).catch(() => [] as LogbookEntry[]),
+    getAlerts(manager.company_id).catch(() => [] as Alert[]),
   ]);
 
   const techGroups = buildTechGroups(queue, logbook);
@@ -163,6 +182,8 @@ export default async function TechniciansPage() {
         </div>
         {isDirector && <DirectorAddManager />}
       </div>
+
+      <SecurityAlerts alerts={alerts} />
 
       <TechnicianTable technicians={technicians} companyId={manager.company_id} />
 

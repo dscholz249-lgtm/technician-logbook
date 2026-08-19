@@ -150,6 +150,34 @@ export async function getConversations(phones: string[]): Promise<MessageLogEntr
   return apiFetch<MessageLogEntry[]>(`/api/conversations?${params}`);
 }
 
+export async function confirmPhoneLink(token: string): Promise<void> {
+  await apiFetch<unknown>(`/api/phone-link/${token}/confirm`, { method: "POST" });
+}
+
+export async function denyPhoneLink(token: string): Promise<void> {
+  await apiFetch<unknown>(`/api/phone-link/${token}/deny`, { method: "POST" });
+}
+
+export interface Alert {
+  id: number;
+  type: string;
+  title: string;
+  body: string;
+  company_id: string | null;
+  metadata: string | null;
+  read_at: number | null;
+  created_at: number;
+}
+
+export async function getAlerts(companyId: string): Promise<Alert[]> {
+  const params = new URLSearchParams({ company_id: companyId });
+  return apiFetch<Alert[]>(`/api/alerts?${params}`);
+}
+
+export async function markAlertRead(id: number): Promise<void> {
+  await apiFetch<unknown>(`/api/alerts/${id}/read`, { method: "POST" });
+}
+
 export async function markIgnored(
   id: number,
   actionedBy: string,
