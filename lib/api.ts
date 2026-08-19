@@ -150,6 +150,20 @@ export async function getConversations(phones: string[]): Promise<MessageLogEntr
   return apiFetch<MessageLogEntry[]>(`/api/conversations?${params}`);
 }
 
+export interface PhoneLinkRequest {
+  token: string;
+  phone: string;
+  email: string;
+  employee_id: string;
+  company_id: string;
+  created_at: number;
+  expires_at: number;
+}
+
+export async function getPhoneLinkDetails(token: string): Promise<PhoneLinkRequest> {
+  return apiFetch<PhoneLinkRequest>(`/api/phone-link/${token}`);
+}
+
 export async function confirmPhoneLink(token: string): Promise<void> {
   await apiFetch<unknown>(`/api/phone-link/${token}/confirm`, { method: "POST" });
 }

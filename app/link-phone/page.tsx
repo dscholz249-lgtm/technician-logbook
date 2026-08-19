@@ -1,5 +1,10 @@
-import Link from "next/link";
-import { confirmPhoneLink, denyPhoneLink } from "@/lib/api";
+import { confirmPhoneLink, denyPhoneLink, getPhoneLinkDetails } from "@/lib/api";
+import {
+  getManagerByEmail,
+  updateManagerPhone,
+  getTechnicianByEmail,
+  updateTechnicianPhone,
+} from "@/lib/supabase/db";
 
 export const dynamic = "force-dynamic";
 
@@ -10,6 +15,21 @@ interface Props {
 async function processAction(token: string, action: string): Promise<"confirmed" | "denied" | "expired" | "invalid"> {
   try {
     if (action === "confirm") {
+      // Fetch request details before confirming — confirm deletes the record.
+      const request = await getPhoneLinkDetails(token);
+
+      // Update Supabase (source of truth) so roster sync doesn't overwrite the change.
+      const manager = await getManagerByEmail(request.email).catch(() => null);
+      if (manager) {
+        await updateManagerPhone(manager.id, request.phone);
+      } else {
+        const tech = await getTechnicianByEmail(request.email).catch(() => null);
+        if (tech) {
+          await updateTechnicianPhone(tech.id, request.phone);
+        }
+      }
+
+      // Update SQLite via Express and send the confirmation SMS.
       await confirmPhoneLink(token);
       return "confirmed";
     }
