@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { InboxIcon, BookOpenIcon, BuildingIcon, UsersIcon, HelpCircleIcon, BarChart2Icon, SirenIcon, StarIcon, MessageSquareIcon } from "lucide-react";
+import { InboxIcon, BookOpenIcon, BuildingIcon, UsersIcon, HelpCircleIcon, BarChart2Icon, SirenIcon, StarIcon, MessageSquareIcon, FileTextIcon } from "lucide-react";
 
 const NAV = [
   {
@@ -29,6 +29,12 @@ const NAV = [
       { href: "/dashboard/support", label: "Support", icon: HelpCircleIcon },
     ],
   },
+  {
+    label: "RESOURCES",
+    items: [
+      { href: "https://claude.ai/code/artifact/5033c60c-03c8-4e71-89c0-a5673b0f5bb7", label: "Product Guide", icon: FileTextIcon, external: true },
+    ],
+  },
 ];
 
 export function Nav() {
@@ -48,20 +54,25 @@ export function Nav() {
           <ul className="space-y-0.5">
             {section.items.map((item) => {
               const active = isActive(item.href, item.exact);
+              const className = [
+                "flex items-center gap-2.5 rounded-lg px-3 py-1.5 text-sm transition-colors",
+                active
+                  ? "bg-skillcat-orange/10 text-skillcat-orange font-medium"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50",
+              ].join(" ");
               return (
                 <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    className={[
-                      "flex items-center gap-2.5 rounded-lg px-3 py-1.5 text-sm transition-colors",
-                      active
-                        ? "bg-skillcat-orange/10 text-skillcat-orange font-medium"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted/50",
-                    ].join(" ")}
-                  >
-                    <item.icon className="size-4 shrink-0" />
-                    {item.label}
-                  </Link>
+                  {item.external ? (
+                    <a href={item.href} target="_blank" rel="noopener noreferrer" className={className}>
+                      <item.icon className="size-4 shrink-0" />
+                      {item.label}
+                    </a>
+                  ) : (
+                    <Link href={item.href} className={className}>
+                      <item.icon className="size-4 shrink-0" />
+                      {item.label}
+                    </Link>
+                  )}
                 </li>
               );
             })}
