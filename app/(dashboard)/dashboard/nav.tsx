@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { InboxIcon, BookOpenIcon, BuildingIcon, UsersIcon, HelpCircleIcon, BarChart2Icon, SirenIcon, StarIcon, MessageSquareIcon, FileTextIcon, type LucideIcon } from "lucide-react";
+import { InboxIcon, BookOpenIcon, BuildingIcon, UsersIcon, HelpCircleIcon, BarChart2Icon, SirenIcon, StarIcon, MessageSquareIcon, type LucideIcon } from "lucide-react";
 
 interface NavItem { href: string; label: string; icon: LucideIcon; exact?: boolean; external?: boolean; }
 interface NavSection { label: string; items: NavItem[] }
@@ -30,12 +30,6 @@ const NAV: NavSection[] = [
     label: "ACCOUNT",
     items: [
       { href: "/dashboard/support", label: "Support", icon: HelpCircleIcon },
-    ],
-  },
-  {
-    label: "RESOURCES",
-    items: [
-      { href: "/dashboard/guide", label: "Product Guide", icon: FileTextIcon },
     ],
   },
 ];
