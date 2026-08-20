@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SkillCat Logbook — Product Reference Guide</title>
+<title>SkillCat Logbook — Product Reference Guide</title>
+<style>
+  :root {
+    --bg: #ffffff;
+    --bg-subtle: #f8f9fa;
+    --bg-card: #ffffff;
+    --border: #e5e7eb;
+    --border-strong: #d1d5db;
+    --text: #111827;
+    --text-muted: #6b7280;
+    --text-faint: #9ca3af;
+    --orange: #f97316;
+    --orange-light: #fff7f0;
+    --orange-border: #fed7aa;
+    --bubble-out: #f3f4f6;
+    --bubble-out-text: #374151;
+    --bubble-in: #f97316;
+    --bubble-in-text: #ffffff;
+    --tag-mgr-bg: #eff6ff;
+    --tag-mgr-text: #1d4ed8;
+    --tag-mgr-border: #bfdbfe;
+    --tag-tech-bg: #f0fdf4;
+    --tag-tech-text: #15803d;
+    --tag-tech-border: #bbf7d0;
+    --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 6px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.04);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0a0a0a;
+      --bg-subtle: #111111;
+      --bg-card: #141414;
+      --border: #262626;
+      --border-strong: #333333;
+      --text: #f5f5f5;
+      --text-muted: #a3a3a3;
+      --text-faint: #525252;
+      --orange: #f97316;
+      --orange-light: #1a0f05;
+      --orange-border: #7c2d12;
+      --bubble-out: #2a2a2a;
+      --bubble-out-text: #e5e5e5;
+      --bubble-in: #f97316;
+      --bubble-in-text: #ffffff;
+      --tag-mgr-bg: #0f172a;
+      --tag-mgr-text: #93c5fd;
+      --tag-mgr-border: #1e3a5f;
+      --tag-tech-bg: #052e16;
+      --tag-tech-text: #86efac;
+      --tag-tech-border: #14532d;
+      --shadow: 0 1px 3px rgba(0,0,0,0.3);
+      --shadow-md: 0 4px 6px rgba(0,0,0,0.3);
+    }
+  }
+  :root[data-theme="light"] {
+    --bg: #ffffff; --bg-subtle: #f8f9fa; --bg-card: #ffffff;
+    --border: #e5e7eb; --border-strong: #d1d5db;
+    --text: #111827; --text-muted: #6b7280; --text-faint: #9ca3af;
+    --orange-light: #fff7f0; --orange-border: #fed7aa;
+    --bubble-out: #f3f4f6; --bubble-out-text: #374151;
+    --tag-mgr-bg: #eff6ff; --tag-mgr-text: #1d4ed8; --tag-mgr-border: #bfdbfe;
+    --tag-tech-bg: #f0fdf4; --tag-tech-text: #15803d; --tag-tech-border: #bbf7d0;
+    --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 6px rgba(0,0,0,0.05);
+  }
+  :root[data-theme="dark"] {
+    --bg: #0a0a0a; --bg-subtle: #111111; --bg-card: #141414;
+    --border: #262626; --border-strong: #333333;
+    --text: #f5f5f5; --text-muted: #a3a3a3; --text-faint: #525252;
+    --orange-light: #1a0f05; --orange-border: #7c2d12;
+    --bubble-out: #2a2a2a; --bubble-out-text: #e5e5e5;
+    --tag-mgr-bg: #0f172a; --tag-mgr-text: #93c5fd; --tag-mgr-border: #1e3a5f;
+    --tag-tech-bg: #052e16; --tag-tech-text: #86efac; --tag-tech-border: #14532d;
+    --shadow: 0 1px 3px rgba(0,0,0,0.3); --shadow-md: 0 4px 6px rgba(0,0,0,0.3);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  /* Header */
+  .site-header {
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: var(--shadow);
+  }
+  .site-header-left { display: flex; align-items: center; gap: 12px; }
+  .logo-mark {
+    width: 32px; height: 32px; background: var(--orange);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .logo-mark svg { width: 18px; height: 18px; fill: white; }
+  .logo-text { font-size: 15px; font-weight: 700; color: var(--text); }
+  .logo-text span { color: var(--orange); }
+  .header-badge {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--text-muted);
+    background: var(--bg-subtle); border: 1px solid var(--border);
+    padding: 3px 8px; border-radius: 4px;
+  }
+  .sms-number {
+    font-family: monospace; font-size: 13px; font-weight: 700;
+    color: var(--orange); background: var(--orange-light);
+    border: 1px solid var(--orange-border);
+    padding: 5px 12px; border-radius: 6px;
+  }
+
+  /* Layout */
+  .content { max-width: 960px; margin: 0 auto; padding: 40px 24px 80px; }
+
+  /* Hero */
+  .hero {
+    background: var(--orange-light);
+    border: 1px solid var(--orange-border);
+    border-radius: 16px;
+    padding: 32px 36px;
+    margin-bottom: 48px;
+    display: flex; gap: 40px; align-items: flex-start;
+  }
+  .hero-main { flex: 1; min-width: 0; }
+  .hero-eyebrow {
+    font-size: 10px; font-weight: 800; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--orange);
+    margin-bottom: 8px; display: block;
+  }
+  .hero h1 { font-size: 26px; font-weight: 800; color: var(--text); line-height: 1.2; margin-bottom: 12px; text-wrap: balance; }
+  .hero-desc { font-size: 14px; color: var(--text-muted); line-height: 1.7; max-width: 480px; }
+  .hero-stats { display: flex; gap: 28px; margin-top: 24px; flex-wrap: wrap; }
+  .hero-stat { }
+  .hero-stat-num { font-size: 22px; font-weight: 800; color: var(--orange); line-height: 1; }
+  .hero-stat-label { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+  .hero-roles { flex-shrink: 0; }
+  .role-pill {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 16px; border-radius: 10px;
+    border: 1px solid var(--border); margin-bottom: 8px;
+    background: var(--bg-card);
+  }
+  .role-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .role-dot.mgr { background: #3b82f6; }
+  .role-dot.tech { background: #22c55e; }
+  .role-name { font-size: 13px; font-weight: 600; color: var(--text); }
+  .role-desc { font-size: 11px; color: var(--text-muted); margin-left: auto; padding-left: 8px; }
+
+  /* How it works */
+  .section-label {
+    font-size: 10px; font-weight: 800; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--orange);
+    margin-bottom: 12px; display: block;
+  }
+  .section-title { font-size: 20px; font-weight: 800; color: var(--text); margin-bottom: 6px; }
+  .section-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; }
+
+  .how-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 56px; }
+  .how-card {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px 20px 20px;
+    box-shadow: var(--shadow);
+  }
+  .how-num {
+    font-size: 12px; font-weight: 800; color: var(--orange);
+    margin-bottom: 10px; display: block;
+  }
+  .how-title { font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+  .how-body { font-size: 12px; color: var(--text-muted); line-height: 1.6; }
+
+  /* Role sections */
+  .role-section { margin-bottom: 56px; }
+  .role-header {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 20px;
+    padding-bottom: 16px; border-bottom: 1px solid var(--border);
+  }
+  .role-badge {
+    font-size: 10px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;
+    padding: 4px 10px; border-radius: 5px; border: 1px solid;
+  }
+  .role-badge.mgr { background: var(--tag-mgr-bg); color: var(--tag-mgr-text); border-color: var(--tag-mgr-border); }
+  .role-badge.tech { background: var(--tag-tech-bg); color: var(--tag-tech-text); border-color: var(--tag-tech-border); }
+  .role-header-text h2 { font-size: 18px; font-weight: 800; color: var(--text); }
+  .role-header-text p { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+  /* Feature cards */
+  .features-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .feature-card {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 12px; overflow: hidden; box-shadow: var(--shadow);
+  }
+  .feature-card-header {
+    padding: 16px 20px 12px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: flex-start; gap: 10px;
+  }
+  .feature-icon {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: var(--orange-light); border: 1px solid var(--orange-border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; flex-shrink: 0;
+  }
+  .feature-card-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+  .feature-card-sub { font-size: 11px; color: var(--text-muted); }
+  .feature-card-body { padding: 16px 20px; }
+
+  /* SMS bubbles */
+  .conversation { display: flex; flex-direction: column; gap: 6px; }
+  .bubble-row { display: flex; }
+  .bubble-row.out { justify-content: flex-end; }
+  .bubble-row.in { justify-content: flex-start; }
+  .bubble {
+    max-width: 85%; padding: 8px 12px; border-radius: 14px;
+    font-size: 12px; line-height: 1.5;
+  }
+  .bubble.out { background: var(--bubble-out); color: var(--bubble-out-text); border-bottom-right-radius: 4px; }
+  .bubble.in { background: var(--bubble-in); color: var(--bubble-in-text); border-bottom-left-radius: 4px; font-weight: 500; }
+  .bubble-label { font-size: 10px; color: var(--text-faint); margin-bottom: 4px; }
+  .bubble-label.right { text-align: right; }
+
+  /* Bullet list */
+  .feature-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+  .feature-list li {
+    display: flex; gap: 8px; align-items: flex-start;
+    font-size: 12px; color: var(--text-muted); line-height: 1.5;
+  }
+  .feature-list li::before {
+    content: "→"; color: var(--orange); font-weight: 700;
+    flex-shrink: 0; margin-top: 1px;
+  }
+
+  /* Portal overview */
+  .portal-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 0; }
+  .portal-page {
+    background: var(--bg-subtle); border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px 14px;
+    text-align: center;
+  }
+  .portal-icon { font-size: 20px; margin-bottom: 6px; }
+  .portal-name { font-size: 11px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+  .portal-desc { font-size: 10px; color: var(--text-muted); line-height: 1.4; }
+
+  /* Full-width feature card */
+  .feature-card.full { grid-column: 1 / -1; }
+  .portal-section { padding: 16px 20px; }
+  .portal-section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text-faint); margin-bottom: 12px; }
+
+  /* Quick reference table */
+  .ref-table-wrap { overflow-x: auto; }
+  .ref-table {
+    width: 100%; border-collapse: collapse; font-size: 12px;
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 12px; overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .ref-table thead tr { background: var(--bg-subtle); }
+  .ref-table th {
+    text-align: left; padding: 10px 16px;
+    font-size: 10px; font-weight: 800; text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+  }
+  .ref-table td {
+    padding: 11px 16px; border-bottom: 1px solid var(--border);
+    vertical-align: top; line-height: 1.5; color: var(--text);
+  }
+  .ref-table tr:last-child td { border-bottom: none; }
+  .ref-table tr:hover td { background: var(--bg-subtle); }
+  .sms-example {
+    font-family: monospace; font-size: 11px;
+    background: var(--bg-subtle); border: 1px solid var(--border);
+    padding: 2px 6px; border-radius: 4px; color: var(--text);
+    white-space: normal; word-break: break-word;
+  }
+  .who-badge {
+    font-size: 9px; font-weight: 700; letter-spacing: 0.06em;
+    text-transform: uppercase; padding: 2px 6px; border-radius: 4px;
+    border: 1px solid; white-space: nowrap;
+  }
+  .who-badge.mgr { background: var(--tag-mgr-bg); color: var(--tag-mgr-text); border-color: var(--tag-mgr-border); }
+  .who-badge.tech { background: var(--tag-tech-bg); color: var(--tag-tech-text); border-color: var(--tag-tech-border); }
+  .who-badge.both { background: var(--orange-light); color: var(--orange); border-color: var(--orange-border); }
+
+  /* Divider */
+  .section-divider { border: none; border-top: 1px solid var(--border); margin: 48px 0; }
+
+  /* Tips box */
+  .tips-box {
+    background: var(--orange-light); border: 1px solid var(--orange-border);
+    border-radius: 12px; padding: 20px 24px;
+    margin-top: 40px;
+  }
+  .tips-title { font-size: 12px; font-weight: 800; color: var(--orange); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.08em; }
+  .tips-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .tip-item { font-size: 12px; color: var(--text-muted); line-height: 1.5; padding-left: 14px; position: relative; }
+  .tip-item::before { content: "★"; color: var(--orange); position: absolute; left: 0; font-size: 10px; top: 2px; }
+
+  @media (max-width: 680px) {
+    .site-header { padding: 12px 16px; }
+    .hero { flex-direction: column; gap: 20px; padding: 24px 20px; }
+    .hero-roles { width: 100%; }
+    .hero-stats { gap: 20px; }
+    .how-grid { grid-template-columns: 1fr; }
+    .features-grid { grid-template-columns: 1fr; }
+    .portal-grid { grid-template-columns: repeat(3, 1fr); }
+    .tips-grid { grid-template-columns: 1fr; }
+    .content { padding: 28px 16px 60px; }
+  }
+</style>
+
+<!-- Header -->
+<header class="site-header">
+  <div class="site-header-left">
+    <div class="logo-mark">
+      <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+    </div>
+    <span class="logo-text"><span>SkillCat</span> Technician Logbook</span>
+    <span class="header-badge">Sales &amp; CS Reference</span>
+  </div>
+  <span class="sms-number">(251) 313-5407</span>
+</header>
+
+<div class="content">
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-main">
+      <span class="hero-eyebrow">Product Overview</span>
+      <h1>Log it by text. See it in the dashboard.</h1>
+      <p class="hero-desc">
+        SkillCat Logbook lets field managers and technicians log training activity, photos, and notes by texting a single number — no app download, no login required in the field. Everything surfaces in a web dashboard for managers and directors.
+      </p>
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <div class="hero-stat-num">1</div>
+          <div class="hero-stat-label">Number to remember</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-num">2</div>
+          <div class="hero-stat-label">User roles</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-num">5</div>
+          <div class="hero-stat-label">Things you can do by text</div>
+        </div>
+        <div class="hero-stat">
+          <div class="hero-stat-num">0</div>
+          <div class="hero-stat-label">App downloads needed</div>
+        </div>
+      </div>
+    </div>
+    <div class="hero-roles">
+      <div class="role-pill">
+        <div class="role-dot mgr"></div>
+        <span class="role-name">Manager / Director</span>
+        <span class="role-desc">Assigns training, logs notes</span>
+      </div>
+      <div class="role-pill">
+        <div class="role-dot tech"></div>
+        <span class="role-name">Technician</span>
+        <span class="role-desc">Logs photos, receives updates</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- How it works -->
+  <span class="section-label">How it works</span>
+  <div class="how-grid">
+    <div class="how-card">
+      <span class="how-num">Step 01</span>
+      <div class="how-title">Manager gets set up</div>
+      <div class="how-body">Manager receives a magic link to the web portal and saves their phone number in Settings. That phone number is how the system knows who they are when they text.</div>
+    </div>
+    <div class="how-card">
+      <span class="how-num">Step 02</span>
+      <div class="how-title">Technicians are invited</div>
+      <div class="how-body">Manager invites technicians via email from the Technicians page. Techs click their magic link and can optionally link their phone by texting their email address to the SkillCat number.</div>
+    </div>
+    <div class="how-card">
+      <span class="how-num">Step 03</span>
+      <div class="how-title">Everyone logs by text</div>
+      <div class="how-body">Managers text training assignments, notes, and photos. Technicians text updates and job site photos. Everything is captured in the dashboard automatically.</div>
+    </div>
+  </div>
+
+  <hr class="section-divider">
+
+  <!-- Manager section -->
+  <div class="role-section">
+    <div class="role-header">
+      <span class="role-badge mgr">Manager / Director</span>
+      <div class="role-header-text">
+        <h2>What managers can do</h2>
+        <p>Manages roster, assigns training, logs team notes — all by text or through the web portal</p>
+      </div>
+    </div>
+
+    <div class="features-grid">
+
+      <!-- SMS: Assign training -->
+      <div class="feature-card">
+        <div class="feature-card-header">
+          <div class="feature-icon">📋</div>
+          <div>
+            <div class="feature-card-title">Assign training by text</div>
+            <div class="feature-card-sub">Queue a course assignment for any technician</div>
+          </div>
+        </div>
+        <div class="feature-card-body">
+          <div class="conversation">
+            <div class="bubble-label right">Manager texts →</div>
+            <div class="bubble-row out"><div class="bubble out">Assign Mike to OSHA 30</div></div>
+            <div class="bubble-row in"><div class="bubble in">Got it! I've queued Mike Johnson for OSHA 30-Hour. ✅</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SMS: Add employee -->
+      <div class="feature-card">
+        <div class="feature-card-header">
+          <div class="feature-icon">👤</div>
+          <div>
+            <div class="feature-card-title">Add a new technician</div>
+            <div class="feature-card-sub">Add someone to the roster without logging in</div>
+          </div>
+        </div>
+        <div class="feature-card-body">
+          <div class="conversation">
+            <div class="bubble-label right">Manager texts →</div>
+            <div class="bubble-row out"><div class="bubble out">Add Sarah Johnson, sarah@company.com, Electrician</div></div>
+            <div class="bubble-row in"><div class="bubble in">Got it! Sarah Johnson has been added to your roster.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SMS: Log a note -->
+      <div class="feature-card">
+        <div class="feature-card-header">
+          <div class="feature-icon">📝</div>
+          <div>
+            <div class="feature-card-title">Log a note about a tech</div>
+            <div class="feature-card-sub">Any observation goes straight to the technician's record</div>
+          </div>
+        </div>
+        <div class="feature-card-body">
+          <div class="conversation">
+            <div class="bubble-label right">Manager texts →</div>
+            <div class="bubble-row out"><div class="bubble out">Note: Mike passed his site safety walkthrough today</div></div>
+            <div class="bubble-row in"><div class="bubble in">Noted. I've logged that for Mike Johnson.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SMS: Own logbook -->
+      <div class="feature-card">
+        <div class="feature-card-header">
+          <div class="feature-icon">📸</div>
+          <div>
+            <div class="feature-card-title">Log for yourself</div>
+            <div class="feature-card-sub">Text or MMS goes to My Logbook — not a technician's record</div>
+          </div>
+        </div>
+        <div class="feature-card-body">
+          <div class="conversation">
+            <div class="bubble-label right">Manager sends photo →</div>
+            <div class="bubble-row out"><div class="bubble out">[photo attached] Final inspection — Riverside site</div></div>
+            <div class="bubble-row in"><div class="bubble in">Thanks! Your photo has been saved to your logbook 📸</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Phone linking -->
+      <div class="feature-card">
+        <div class="feature-card-header">
+          <div class="feature-icon">🔗</div>
+          <div>
+            <div class="feature-card-title">Link phone to account</div>
+            <div class="feature-card-sub">Same flow as technicians — no portal login required</div>
+          </div>
+        </div>
+        <div class="feature-card-body">
+          <div class="conversation">
+            <div class="bubble-label right">Manager texts their email →</div>
+            <div class="bubble-row out"><div class="bubble out">sarah.manager@company.com</div></div>
+            <div class="bubble-row in"><div class="bubble in">We sent a confirmation email to sarah.manager@company.com. Click the link there to link your phone. 📧</div></div>
+          </div>
+          <div style="margin-top:12px; font-size:11px; color:var(--text-muted); line-height:1.5;">
+            One click on <strong>"Yes, this is me"</strong> and they're set. Works for initial setup and for updating an existing number. The Settings page is also available as a manual fallback.
+          </div>
+        </div>
+      </div>
+
+      <!-- Web portal -->
+      <div class="feature-card full">
+        <div class="feature-card-header">
+          <div class="feature-icon">🖥️</div>
+          <div>
+            <div class="feature-card-title">Web portal — 5 dedicated pages</div>
+            <div class="feature-card-sub">Access via magic link email — no password needed</div>
+          </div>
+        </div>
+        <div class="portal-section">
+          <div class="portal-section-title">Pages in the manager portal</div>
+          <div class="portal-grid">
+            <div class="portal-page">
+              <div class="portal-icon">🏠</div>
+              <div class="portal-name">Home</div>
+              <div class="portal-desc">Recent logbook activity + SMS number callout</div>
+            </div>
+            <div class="portal-page">
+              <div class="portal-icon">👥</div>
+              <div class="portal-name">Technicians</div>
+              <div class="portal-desc">Full roster, invite buttons, activity logs per tech</div>
+            </div>
+            <div class="portal-page">
+              <div class="portal-icon">📒</div>
+              <div class="portal-name">My Logbook</div>
+              <div class="portal-desc">Manager's own photos and notes</div>
+            </div>
+            <div class="portal-page">
+              <div class="portal-icon">📖</div>
+              <div class="portal-name">How To</div>
+              <div class="portal-desc">In-app guide + SMS number vCard download</div>
+            </div>
+            <div class="portal-page">
+              <div class="portal-icon">⚙️</div>
+              <div class="portal-name">Settings</div>
+              <div class="portal-desc">Phone number, reminders, add managers (directors only)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Invite technicians -->
+      <div class="feature-card">
+        <div class="feature-card-header">
+          <div class="feature-icon">✉️</div>
+          <div>
+            <div class="feature-card-title">Invite technicians</div>
+            <div class="feature-card-sub">Sends a branded email with a magic login link</div>
+          </div>
+        </div>
+        <div class="feature-card-body">
+          <ul class="feature-list">
+            <li>Invite individual techs with one click from the Technicians table</li>
+            <li>"Invite All" button sends to everyone with an email on file at once</li>
+            <li>Preview the exact email before sending</li>
+            <li>Techs get a magic link — no password to create or remember</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Director vs Manager -->
+      <div class="feature-card">
+        <div class="feature-card-header">
+          <div class="feature-icon">🏢</div>
+          <div>
+            <div class="feature-card-title">Director vs. Manager</div>
+            <div class="feature-card-sub">Directors get company-wide visibility</div>
+          </div>
+        </div>
+        <div class="feature-card-body">
+          <ul class="feature-list">
+            <li>Directors see all logs across the company, not just their own</li>
+            <li>Directors can add new managers from the Settings page</li>
+            <li>Both roles use the same portal and SMS number</li>
+            <li>Both can log photos and notes to their personal logbook</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <hr class="section-divider">
+
+  <!-- Technician section -->
+  <div class="role-section">
+    <div class="role-header">
+      <span class="role-badge tech">Technician</span>
+      <div class="role-header-text">
+        <h2>What technicians can do</h2>
+        <p>Log from the field by text — no app, no login needed once their phone is linked</p>
+      </div>
+    </div>
+
+    <div class="features-grid">
+
+      <!-- Phone linking -->
+      <div class="feature-card">
+        <div class="feature-card-header">
+          <div class="feature-icon">🔗</div>
+          <div>
+            <div class="feature-card-title">Link phone to account</div>
+            <div class="feature-card-sub">One-time setup — takes about 60 seconds</div>
+          </div>
+        </div>
+        <div class="feature-card-body">
+          <div class="conversation">
+            <div class="bubble-label right">Technician texts their email →</div>
+            <div class="bubble-row out"><div class="bubble out">mike.johnson@company.com</div></div>
+            <div class="bubble-row in"><div class="bubble in">We sent a confirmation email to mike.johnson@company.com. Click the link there to link your phone. 📧</div></div>
+          </div>
+          <div style="margin-top:12px; font-size:11px; color:var(--text-muted); line-height:1.5;">
+            Tech clicks <strong>"Yes, this is me"</strong> in the email → phone is linked. If someone else texted the email, they click <strong>"This is not me"</strong> and the manager sees a security alert.
+          </div>
+        </div>
+      </div>
+
+      <!-- Text logging -->
+      <div class="feature-card">
+        <div class="feature-card-header">
+          <div class="feature-icon">💬</div>
+          <div>
+            <div class="feature-card-title">Log updates by text</div>
+            <div class="feature-card-sub">Any text message goes straight to their logbook</div>
+          </div>
+        </div>
+        <div class="feature-card-body">
+          <div class="conversation">
+            <div class="bubble-label right">Technician texts →</div>
+            <div class="bubble-row out"><div class="bubble out">Finished roof inspection at 34 Maple St, all clear</div></div>
+            <div class="bubble-row in"><div class="bubble in">Got it. I've added it to your logbook.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Photo logging -->
+      <div class="feature-card">
+        <div class="feature-card-header">
+          <div class="feature-icon">📷</div>
+          <div>
+            <div class="feature-card-title">Send photos from the job</div>
+            <div class="feature-card-sub">MMS photos are stored and visible to the manager</div>
+          </div>
+        </div>
+        <div class="feature-card-body">
+          <div class="conversation">
+            <div class="bubble-label right">Tech sends a photo →</div>
+            <div class="bubble-row out"><div class="bubble out">[photo attached] Panel installed, East building</div></div>
+            <div class="bubble-row in"><div class="bubble in">Thanks! Your photo has been saved 📸</div></div>
+          </div>
+          <div style="margin-top:12px; font-size:11px; color:var(--text-muted);">Manager gets an SMS notification with a link to the technician's logbook.</div>
+        </div>
+      </div>
+
+      <!-- Tech portal -->
+      <div class="feature-card">
+        <div class="feature-card-header">
+          <div class="feature-icon">📱</div>
+          <div>
+            <div class="feature-card-title">Technician portal</div>
+            <div class="feature-card-sub">View their full logbook history — no password needed</div>
+          </div>
+        </div>
+        <div class="feature-card-body">
+          <ul class="feature-list">
+            <li>Access via magic link from the invite email</li>
+            <li>See all logged notes, photos, and training assignments</li>
+            <li>No app download or account creation required</li>
+            <li>Manager can see the same view from the Technicians page</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <hr class="section-divider">
+
+  <!-- Quick reference table -->
+  <span class="section-label">Quick Reference</span>
+  <p class="section-sub">All SMS commands — print this and keep it handy during onboarding calls</p>
+
+  <div class="ref-table-wrap">
+    <table class="ref-table">
+      <thead>
+        <tr>
+          <th>Action</th>
+          <th>Example text to send</th>
+          <th>Who</th>
+          <th>What happens</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Assign training</strong></td>
+          <td><span class="sms-example">Assign Mike to OSHA 30</span></td>
+          <td><span class="who-badge mgr">Manager</span></td>
+          <td>Queued for the SkillCat team to action; manager gets a confirmation SMS when done</td>
+        </tr>
+        <tr>
+          <td><strong>Add technician</strong></td>
+          <td><span class="sms-example">Add Sarah Johnson, sarah@co.com, Electrician</span></td>
+          <td><span class="who-badge mgr">Manager</span></td>
+          <td>Added to the action queue; admin confirms and adds to roster</td>
+        </tr>
+        <tr>
+          <td><strong>Log a note about a tech</strong></td>
+          <td><span class="sms-example">Note: Mike passed safety walkthrough</span></td>
+          <td><span class="who-badge mgr">Manager</span></td>
+          <td>Saved to the named technician's logbook record</td>
+        </tr>
+        <tr>
+          <td><strong>Manager self-log (text)</strong></td>
+          <td><span class="sms-example">Completed final inspection, Riverside</span></td>
+          <td><span class="who-badge mgr">Manager</span></td>
+          <td>Saved to My Logbook (not attached to any technician)</td>
+        </tr>
+        <tr>
+          <td><strong>Manager self-log (photo)</strong></td>
+          <td><em>Send any MMS photo</em></td>
+          <td><span class="who-badge mgr">Manager</span></td>
+          <td>Photo saved to My Logbook with optional caption</td>
+        </tr>
+        <tr>
+          <td><strong>Technician text log</strong></td>
+          <td><span class="sms-example">Finished panel install at 34 Maple</span></td>
+          <td><span class="who-badge tech">Technician</span></td>
+          <td>Saved to their logbook; manager gets notified</td>
+        </tr>
+        <tr>
+          <td><strong>Technician photo log</strong></td>
+          <td><em>Send any MMS photo</em></td>
+          <td><span class="who-badge tech">Technician</span></td>
+          <td>Photo saved to logbook; manager gets SMS with link</td>
+        </tr>
+        <tr>
+          <td><strong>Link phone to account</strong></td>
+          <td><span class="sms-example">mike@company.com</span></td>
+          <td><span class="who-badge both">Both</span></td>
+          <td>Triggers confirmation email; one click to link permanently. Works for managers and technicians — no portal login needed</td>
+        </tr>
+        <tr>
+          <td><strong>Look up a course</strong></td>
+          <td><span class="sms-example">What courses do you have for electrical?</span></td>
+          <td><span class="who-badge mgr">Manager</span></td>
+          <td>Returns matching courses from the catalog; can assign from the reply</td>
+        </tr>
+        <tr>
+          <td><strong>Get help</strong></td>
+          <td><span class="sms-example">HELP</span></td>
+          <td><span class="who-badge both">Both</span></td>
+          <td>Sends a help message with key commands</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Tips -->
+  <div class="tips-box">
+    <div class="tips-title">Sales &amp; CS Tips</div>
+    <div class="tips-grid">
+      <div class="tip-item">The system understands natural language — managers don't need to memorize exact formats. "Put Mike on the OSHA course" works just as well as "Assign Mike to OSHA 30."</div>
+      <div class="tip-item">To start logging by SMS, managers (and techs) just text their registered email address to the SkillCat number. They get a confirmation email, click "Yes, this is me," and they're linked — no portal login required. Settings still has a manual phone field as a fallback.</div>
+      <div class="tip-item">Technicians don't need to do anything to get started — their manager can start logging notes about them immediately from the portal.</div>
+      <div class="tip-item">Phone linking for technicians is optional. Without it, managers log on their behalf. With it, techs can log their own updates directly.</div>
+      <div class="tip-item">Directors see the whole company; managers see their own activity only. If a customer has multiple locations, they likely need a director account.</div>
+      <div class="tip-item">If the system doesn't understand a message, it asks a clarifying question. Unresolved requests go to a human review queue for the SkillCat team.</div>
+    </div>
+  </div>
+
+</div>
+</html>

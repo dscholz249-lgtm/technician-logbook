@@ -2,9 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { InboxIcon, BookOpenIcon, BuildingIcon, UsersIcon, HelpCircleIcon, BarChart2Icon, SirenIcon, StarIcon, MessageSquareIcon, FileTextIcon } from "lucide-react";
+import { InboxIcon, BookOpenIcon, BuildingIcon, UsersIcon, HelpCircleIcon, BarChart2Icon, SirenIcon, StarIcon, MessageSquareIcon, FileTextIcon, type LucideIcon } from "lucide-react";
 
-const NAV = [
+interface NavItem { href: string; label: string; icon: LucideIcon; exact?: boolean; external?: boolean; }
+interface NavSection { label: string; items: NavItem[] }
+
+const NAV: NavSection[] = [
   {
     label: "LOGBOOK",
     items: [
@@ -32,7 +35,7 @@ const NAV = [
   {
     label: "RESOURCES",
     items: [
-      { href: "https://claude.ai/code/artifact/5033c60c-03c8-4e71-89c0-a5673b0f5bb7", label: "Product Guide", icon: FileTextIcon, external: true },
+      { href: "/dashboard/guide", label: "Product Guide", icon: FileTextIcon },
     ],
   },
 ];
