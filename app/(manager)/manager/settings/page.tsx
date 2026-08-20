@@ -4,7 +4,7 @@ import { PhoneForm } from "../phone-form";
 import { ReminderForm } from "../reminder-form";
 import { DirectorAddManager } from "../director-add-manager";
 import { cookies } from "next/headers";
-import { env } from "@/lib/env";
+import { env, isAdmin } from "@/lib/env";
 import type { ImpersonateCookie } from "@/app/(dashboard)/dashboard/managers/impersonate-actions";
 
 export const dynamic = "force-dynamic";
@@ -13,11 +13,11 @@ export default async function SettingsPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  const isAdmin = env.ADMIN_EMAILS.includes((user?.email ?? "").toLowerCase());
+  const userIsAdmin = isAdmin(user?.email ?? "");
   const jar = await cookies();
   const impersonateCookie = jar.get("skillcat_impersonate");
   let effectiveEmail = user!.email!;
-  if (isAdmin && impersonateCookie?.value) {
+  if (userIsAdmin && impersonateCookie?.value) {
     try {
       const imp = JSON.parse(impersonateCookie.value) as ImpersonateCookie;
       effectiveEmail = imp.email;

@@ -9,7 +9,7 @@ import { TechInviteButton, InviteAllTechsButton } from "@/components/tech-invite
 import { DirectorAddManager } from "../director-add-manager";
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "@/components/ui/table";
 import { cookies } from "next/headers";
-import { env } from "@/lib/env";
+import { env, isAdmin } from "@/lib/env";
 import type { QueueItem, LogbookEntry } from "@/lib/types";
 import type { Technician } from "@/lib/supabase/db";
 import type { ImpersonateCookie } from "@/app/(dashboard)/dashboard/managers/impersonate-actions";
@@ -139,11 +139,11 @@ export default async function TechniciansPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  const isAdmin = env.ADMIN_EMAILS.includes((user?.email ?? "").toLowerCase());
+  const userIsAdmin = isAdmin(user?.email ?? "");
   const jar = await cookies();
   const impersonateCookie = jar.get("skillcat_impersonate");
   let effectiveEmail = user!.email!;
-  if (isAdmin && impersonateCookie?.value) {
+  if (userIsAdmin && impersonateCookie?.value) {
     try {
       const imp = JSON.parse(impersonateCookie.value) as ImpersonateCookie;
       effectiveEmail = imp.email;

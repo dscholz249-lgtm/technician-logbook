@@ -2,23 +2,23 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { getManagerByEmail, getTechnicianByEmail } from "@/lib/supabase/db";
-import { env } from "@/lib/env";
+import { env, isAdmin } from "@/lib/env";
 
 export async function sendMagicLink(
   email: string,
 ): Promise<{ error?: string }> {
   const normalized = email.trim().toLowerCase();
 
-  const isAdmin = env.ADMIN_EMAILS.includes(normalized);
-  const manager = isAdmin ? null : await getManagerByEmail(normalized).catch(() => null);
-  const technician = (!isAdmin && !manager) ? await getTechnicianByEmail(normalized).catch(() => null) : null;
+  const userIsAdmin = isAdmin(normalized);
+  const manager = userIsAdmin ? null : await getManagerByEmail(normalized).catch(() => null);
+  const technician = (!userIsAdmin && !manager) ? await getTechnicianByEmail(normalized).catch(() => null) : null;
 
-  if (!isAdmin && !manager && !technician) {
+  if (!userIsAdmin && !manager && !technician) {
     return { error: "Email not recognized. Contact your SkillCat administrator." };
   }
 
   const redirectTo = `${env.PUBLIC_ORIGIN}/auth/callback`;
-  console.log("[sign-in] emailRedirectTo:", redirectTo, "role:", isAdmin ? "admin" : "manager");
+  console.log("[sign-in] emailRedirectTo:", redirectTo, "role:", userIsAdmin ? "admin" : "manager");
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithOtp({

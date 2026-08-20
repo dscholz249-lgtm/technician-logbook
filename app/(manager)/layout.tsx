@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { getManagerByEmail, getCompanies } from "@/lib/supabase/db";
-import { env } from "@/lib/env";
+import { env, isAdmin } from "@/lib/env";
 import { ManagerNav } from "@/components/manager-nav";
 import { ImpersonationBanner } from "./impersonation-banner";
 import { PhoneRequiredModal } from "@/components/phone-required-modal";
@@ -17,13 +17,13 @@ export default async function ManagerLayout({ children }: { children: React.Reac
 
   if (!user?.email) redirect("/auth/sign-in");
 
-  const isAdmin = env.ADMIN_EMAILS.includes(user.email.toLowerCase());
+  const userIsAdmin = isAdmin(user.email);
   const jar = await cookies();
   const impersonateCookie = jar.get("skillcat_impersonate");
   let impersonating: ImpersonateCookie | null = null;
   let effectiveEmail = user.email;
 
-  if (isAdmin && impersonateCookie?.value) {
+  if (userIsAdmin && impersonateCookie?.value) {
     try {
       impersonating = JSON.parse(impersonateCookie.value) as ImpersonateCookie;
       effectiveEmail = impersonating.email;

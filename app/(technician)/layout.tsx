@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { getTechnicianByEmail } from "@/lib/supabase/db";
-import { env } from "@/lib/env";
+import { env, isAdmin } from "@/lib/env";
 import { ImpersonationBanner } from "@/app/(manager)/impersonation-banner";
 import type { ImpersonateCookie } from "@/app/(dashboard)/dashboard/managers/impersonate-actions";
 
@@ -20,13 +20,13 @@ export default async function TechnicianLayout({
   }
 
   // Admins can impersonate any technician via cookie
-  const isAdmin = env.ADMIN_EMAILS.includes(user.email.toLowerCase());
+  const userIsAdmin = isAdmin(user.email);
   const jar = await cookies();
   const impersonateCookie = jar.get("skillcat_impersonate");
   let impersonating: ImpersonateCookie | null = null;
   let effectiveEmail = user.email;
 
-  if (isAdmin && impersonateCookie?.value) {
+  if (userIsAdmin && impersonateCookie?.value) {
     try {
       impersonating = JSON.parse(impersonateCookie.value) as ImpersonateCookie;
       effectiveEmail = impersonating.email;

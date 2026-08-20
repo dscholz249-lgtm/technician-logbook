@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getManagerByEmail, getTechnicianByEmail } from "@/lib/supabase/db";
-import { env } from "@/lib/env";
+import { env, isAdmin } from "@/lib/env";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
@@ -49,8 +49,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${origin}/auth/sign-in?error=no_user`);
   }
 
-  const isAdmin = env.ADMIN_EMAILS.includes(user.email.toLowerCase());
-  if (isAdmin) {
+  const userIsAdmin = isAdmin(user.email);
+  if (userIsAdmin) {
     return NextResponse.redirect(`${origin}/dashboard`);
   }
 

@@ -23,7 +23,7 @@ export const env = {
   get SLACK_WEBHOOK_URL(): string | undefined {
     return process.env.SLACK_WEBHOOK_URL;
   },
-  // Comma-separated list of emails allowed to access the admin dashboard.
+  // Comma-separated list of emails explicitly allowed to access the admin dashboard.
   get ADMIN_EMAILS(): string[] {
     const raw = process.env.ADMIN_EMAILS || "";
     return raw.split(",").map(e => e.trim().toLowerCase()).filter(Boolean);
@@ -41,6 +41,14 @@ export const env = {
     return raw.replace(/\/$/, "");
   },
 };
+
+// Single source of truth for the admin check.
+// Grants access to any @skillcatapp.com address AND any email in ADMIN_EMAILS.
+export function isAdmin(email: string | null | undefined): boolean {
+  if (!email) return false;
+  const lower = email.toLowerCase();
+  return lower.endsWith("@skillcatapp.com") || env.ADMIN_EMAILS.includes(lower);
+}
 
 function required(name: string): string {
   const v = process.env[name];

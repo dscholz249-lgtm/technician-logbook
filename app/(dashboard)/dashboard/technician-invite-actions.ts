@@ -4,7 +4,7 @@ import { Resend } from "resend";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getCompanies, getManagerByEmail } from "@/lib/supabase/db";
-import { env } from "@/lib/env";
+import { env, isAdmin } from "@/lib/env";
 import { buildTechInviteEmail } from "@/lib/email/tech-invite";
 import { capture } from "@/lib/analytics";
 
@@ -15,8 +15,8 @@ async function getCallerInfo(): Promise<{ email: string; name: string; isAdmin: 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user?.email) throw new Error("Not authenticated");
 
-  const isAdmin = env.ADMIN_EMAILS.includes(user.email.toLowerCase());
-  if (isAdmin) {
+  const userIsAdmin = isAdmin(user.email);
+  if (userIsAdmin) {
     return { email: user.email, name: "SkillCat", isAdmin: true };
   }
 

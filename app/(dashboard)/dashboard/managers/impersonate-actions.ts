@@ -3,12 +3,12 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { env } from "@/lib/env";
+import { env, isAdmin } from "@/lib/env";
 
 async function requireAdmin(): Promise<void> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user?.email || !env.ADMIN_EMAILS.includes(user.email.toLowerCase())) {
+  if (!user?.email || !isAdmin(user.email)) {
     throw new Error("Unauthorized");
   }
 }
@@ -39,7 +39,7 @@ export async function startImpersonation(formData: FormData): Promise<void> {
 export async function stopImpersonation(): Promise<void> {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user?.email || !env.ADMIN_EMAILS.includes(user.email.toLowerCase())) {
+  if (!user?.email || !isAdmin(user.email)) {
     throw new Error("Unauthorized");
   }
   const jar = await cookies();
