@@ -129,10 +129,10 @@ export function buildInviteEmail({
           <!-- Text SkillCat — primary CTA -->
           <tr>
             <td style="padding:0 40px 32px;">
-              <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+              <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="width:100%;">
                 <tr>
-                  <td align="center" style="border-radius:8px; background-color:#F05523;">
-                    <a href="sms:+12513135407" style="display:block; padding:14px 0; font-size:14px; font-weight:700; color:#ffffff; text-decoration:none; text-align:center;">
+                  <td width="100%" style="width:100%; border-radius:8px; background-color:#F05523;">
+                    <a href="sms:+12513135407" style="display:block; width:100%; padding:14px 0; font-size:14px; font-weight:700; color:#ffffff; text-decoration:none; text-align:center; box-sizing:border-box;">
                       Text SkillCat &mdash; (251) 313-5407
                     </a>
                   </td>
