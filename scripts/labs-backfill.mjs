@@ -1,6 +1,15 @@
 /**
  * One-time backfill of the existing roster into the Labs Console.
  *
+ * Run from the repo root — it imports @supabase/supabase-js, so node has to be
+ * able to see this project's node_modules:
+ *
+ *   cd /path/to/skillcat-technician-logbook
+ *   node --env-file=.env.local scripts/labs-backfill.mjs --dry-run
+ *
+ * --env-file needs the four LABS_CONSOLE_* / Supabase vars in .env.local. To
+ * pass them inline instead:
+ *
  *   NEXT_PUBLIC_SUPABASE_URL=… SUPABASE_SERVICE_ROLE_KEY=… \
  *   LABS_CONSOLE_PRODUCT_ID=… LABS_CONSOLE_SECRET=… \
  *   LABS_CONSOLE_ENDPOINT=https://<console>/v1/events \
@@ -34,7 +43,13 @@ for (const [name, value] of Object.entries({
   LABS_CONSOLE_ENDPOINT: ENDPOINT,
 })) {
   if (!value) {
-    console.error(`Missing ${name}`);
+    console.error(
+      `Missing ${name}.\n\n` +
+        "Run from the repo root with the env file loaded:\n" +
+        "  node --env-file=.env.local scripts/labs-backfill.mjs --dry-run\n\n" +
+        "LABS_CONSOLE_PRODUCT_ID and LABS_CONSOLE_SECRET come from the Console's\n" +
+        "product page; LABS_CONSOLE_ENDPOINT is that Console's /v1/events URL.",
+    );
     process.exit(1);
   }
 }
