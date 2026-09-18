@@ -118,6 +118,13 @@ export async function deleteCompany(id: string): Promise<void> {
   if (error) throw error;
 }
 
+// Reporting to the Labs Console happens here rather than in the actions
+// layer because every path — the /join form, the dashboard, the CSV import —
+// converges on these functions. The Console treats a re-send for an existing
+// external_user_id as an update, not a second membership, so emitting on every
+// write is safe and means no path can silently skip reporting.
+import { labsEventDetached, technicianExternalId } from "@/lib/labs-console";
+
 // ----------------------------------------------------------------- managers
 export async function upsertManager(
   companyId: string,
@@ -133,6 +140,7 @@ export async function upsertManager(
       .select()
       .single();
     if (error) throw error;
+    reportManager(row);
     return row;
   }
   const { data: row, error } = await db
@@ -141,7 +149,21 @@ export async function upsertManager(
     .select()
     .single();
   if (error) throw error;
+  reportManager(row);
   return row;
+}
+
+/** A manager gaining access — for the Logbook that is finishing /join or being
+ *  added from the dashboard. The manager's own id is stable, so it is the
+ *  external_user_id directly. */
+function reportManager(row: Manager): void {
+  labsEventDetached("user.registered", {
+    external_user_id: row.id,
+    email: row.email,
+    phone: row.phone,
+    name: row.name,
+    role: row.role ?? "manager",
+  });
 }
 
 export async function getManagerByEmail(email: string): Promise<Manager | null> {
@@ -175,6 +197,10 @@ export async function softDeleteManager(managerId: string): Promise<void> {
     .update({ deleted_at: new Date().toISOString() })
     .eq("id", managerId);
   if (error) throw error;
+  labsEventDetached("user.removed", {
+    external_user_id: managerId,
+    reason: "deleted",
+  });
 }
 
 export async function updateManagerReminderPreference(
@@ -195,12 +221,65 @@ export async function replaceTechnicians(
   rows: { name: string; email?: string | null; title?: string | null }[],
 ): Promise<void> {
   const db = createAdminClient();
-  await db.from("technicians").delete().eq("company_id", companyId);
-  if (rows.length === 0) return;
-  const { error } = await db
+
+  // Read before the delete so the Console gets a diff rather than a
+  // remove-everything-then-add-everything churn on every roster save. The
+  // rows are hard-deleted with no deleted_at, so this is the only moment a
+  // removal is observable at all.
+  const { data: before } = await db
     .from("technicians")
-    .insert(rows.map(r => ({ company_id: companyId, ...r })));
-  if (error) throw error;
+    .select("*")
+    .eq("company_id", companyId);
+
+  await db.from("technicians").delete().eq("company_id", companyId);
+
+  let inserted: Technician[] = [];
+  if (rows.length > 0) {
+    const { data, error } = await db
+      .from("technicians")
+      .insert(rows.map(r => ({ company_id: companyId, ...r })))
+      .select();
+    if (error) throw error;
+    inserted = data ?? [];
+  }
+
+  reportTechnicianDiff(companyId, before ?? [], inserted);
+}
+
+/**
+ * Emits registrations for technicians now on the roster and removals for those
+ * no longer on it, keyed on a derived stable id (see technicianExternalId).
+ *
+ * A technician "registers" by being added to the roster — they never log in,
+ * and the event is about access, not authentication.
+ */
+function reportTechnicianDiff(
+  companyId: string,
+  before: Technician[],
+  after: Technician[],
+): void {
+  const idOf = (t: { email?: string | null; phone?: string | null; name?: string | null }) =>
+    technicianExternalId(companyId, t);
+
+  const afterIds = new Set(after.map(idOf));
+
+  for (const t of after) {
+    labsEventDetached("user.registered", {
+      external_user_id: idOf(t),
+      email: t.email,
+      phone: t.phone,
+      name: t.name,
+      role: "technician",
+    });
+  }
+
+  for (const t of before) {
+    if (afterIds.has(idOf(t))) continue;
+    labsEventDetached("user.removed", {
+      external_user_id: idOf(t),
+      reason: "deleted",
+    });
+  }
 }
 
 export async function getTechnicianByEmail(email: string): Promise<Technician | null> {
