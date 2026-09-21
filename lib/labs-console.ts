@@ -69,6 +69,66 @@ export async function labsEvent(
 }
 
 /**
+ * Same send, but reports what the Console actually said.
+ *
+ * `labsEvent` swallowing is correct in a user path and useless in an
+ * admin-invoked one: a route that returns 200 having silently had its event
+ * rejected is indistinguishable from one that worked, which is exactly the
+ * hole you fall into when nothing shows up in the Console. Internal routes use
+ * this instead so the status code is visible.
+ */
+export async function labsEventReporting(
+  eventType: LabsEventType,
+  data: unknown,
+  opts?: { occurredAt?: string; eventId?: string },
+): Promise<{ ok: boolean; status: number | null; body: string }> {
+  const productId = process.env.LABS_CONSOLE_PRODUCT_ID;
+  const secret = process.env.LABS_CONSOLE_SECRET;
+  if (!productId || !secret) {
+    return {
+      ok: false,
+      status: null,
+      body: "LABS_CONSOLE_PRODUCT_ID or LABS_CONSOLE_SECRET is not set on this deploy",
+    };
+  }
+
+  const body = JSON.stringify({
+    event_id: opts?.eventId ?? crypto.randomUUID(),
+    event_type: eventType,
+    occurred_at: opts?.occurredAt ?? new Date().toISOString(),
+    product_id: productId,
+    data,
+  });
+
+  const ts = Math.floor(Date.now() / 1000).toString();
+  const sig = crypto
+    .createHmac("sha256", secret)
+    .update(`${ts}.${body}`)
+    .digest("hex");
+
+  try {
+    const res = await fetch(ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Labs-Product": productId,
+        "X-Labs-Timestamp": ts,
+        "X-Labs-Signature": `v1=${sig}`,
+      },
+      body,
+      signal: AbortSignal.timeout(10_000),
+    });
+    return {
+      ok: res.status === 202 || res.status === 200,
+      status: res.status,
+      body: await res.text(),
+    };
+  } catch (err) {
+    return { ok: false, status: null, body: String(err) };
+  }
+}
+
+/**
  * Fire without awaiting, for call sites inside a user-facing request. Keeps
  * the rule above literal: the caller does not wait, and a rejection cannot
  * escape into their path.

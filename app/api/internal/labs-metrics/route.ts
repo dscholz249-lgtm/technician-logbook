@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCompanies } from "@/lib/supabase/db";
 import { getLastActiveByPhones } from "@/lib/api";
-import { labsEvent } from "@/lib/labs-console";
+import { labsEventReporting } from "@/lib/labs-console";
 
 /**
  * Daily metrics snapshot for the Labs Console.
@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
     if (!lastActiveAt || t > Date.parse(lastActiveAt)) lastActiveAt = iso;
   }
 
-  await labsEvent("metrics.daily", {
+  const sent = await labsEventReporting("metrics.daily", {
     as_of_date: asOfDate,
     total_users: totalUsers,
     ...(activityAvailable ? { dau, mau } : {}),
@@ -84,6 +84,11 @@ export async function POST(req: NextRequest) {
   });
 
   return NextResponse.json({
+    console_accepted: sent.ok,
+    console_status: sent.status,
+    console_response: sent.body,
+    console_endpoint:
+      process.env.LABS_CONSOLE_ENDPOINT ?? "(default — set explicitly if wrong)",
     as_of_date: asOfDate,
     total_users: totalUsers,
     managers: managers.length,
@@ -92,5 +97,5 @@ export async function POST(req: NextRequest) {
     mau: activityAvailable ? mau : null,
     last_active_at: lastActiveAt,
     activity_source: activityAvailable ? "express" : "unavailable",
-  });
+  }, { status: sent.ok ? 200 : 502 });
 }
