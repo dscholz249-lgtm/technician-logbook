@@ -44,6 +44,18 @@ export async function POST(req: NextRequest) {
   const technicians = companies.flatMap((c) => c.technicians ?? []);
   const totalUsers = managers.length + technicians.length;
 
+  // The Logbook's own cut of its users. "235 users" is true and says nothing
+  // about a product whose whole shape is a few managers to many technicians
+  // across a handful of companies. The Console renders these as given — they
+  // are not required to add up to total_users, which is why Companies can sit
+  // alongside people without being wrong.
+  const breakdown: Record<string, number> = {
+    Companies: companies.length,
+    Managers: managers.filter((m) => (m.role ?? "manager") === "manager").length,
+    Directors: managers.filter((m) => m.role === "director").length,
+    Technicians: technicians.length,
+  };
+
   const phones = [
     ...managers.map((m) => m.phone),
     ...technicians.map((t) => t.phone),
@@ -81,6 +93,7 @@ export async function POST(req: NextRequest) {
     total_users: totalUsers,
     ...(activityAvailable ? { dau, mau } : {}),
     ...(lastActiveAt ? { last_active_at: lastActiveAt } : {}),
+    breakdown,
   });
 
   return NextResponse.json({
@@ -91,8 +104,7 @@ export async function POST(req: NextRequest) {
       process.env.LABS_CONSOLE_ENDPOINT ?? "(default — set explicitly if wrong)",
     as_of_date: asOfDate,
     total_users: totalUsers,
-    managers: managers.length,
-    technicians: technicians.length,
+    breakdown,
     dau: activityAvailable ? dau : null,
     mau: activityAvailable ? mau : null,
     last_active_at: lastActiveAt,
