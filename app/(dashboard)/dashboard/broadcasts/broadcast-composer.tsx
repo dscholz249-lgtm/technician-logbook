@@ -132,7 +132,10 @@ export function BroadcastComposer({
     });
   }
 
-  const outgoing = body.includes("STOP") ? body.trim() : `${body.trim()}${OPT_OUT_FOOTER}`;
+  // Must match the server's rule exactly (lib/broadcast.js withOptOutFooter),
+  // or the preview shows a message that differs from what goes out.
+  const trimmedBody = body.trim();
+  const outgoing = /\bSTOP\b/.test(trimmedBody) ? trimmedBody : `${trimmedBody}${OPT_OUT_FOOTER}`;
   const { gsm, length, segments } = segmentInfo(outgoing);
 
   function openConfirm() {
