@@ -18,11 +18,30 @@
  * have had `npm install` for anything but the app.
  */
 
-const target = process.env.CRON_TARGET_URL;
+const raw = process.env.CRON_TARGET_URL;
 const secret = process.env.CRON_SECRET;
 
-if (!target) {
-  console.error("CRON_TARGET_URL is not set — nothing to call.");
+if (!raw) {
+  console.error("[cron] CRON_TARGET_URL is not set — nothing to call.");
+  process.exit(1);
+}
+
+// Railway shows service domains without a scheme, so the value pasted in is
+// usually "app.up.railway.app/..." and fetch rejects that outright. There is
+// no case where a scheme-less value here means anything other than https, so
+// normalise it rather than failing a job a day until someone reads the log.
+const target = /^https?:\/\//.test(raw) ? raw : `https://${raw}`;
+if (target !== raw) {
+  console.log(`[cron] CRON_TARGET_URL had no scheme — using ${target}`);
+}
+
+try {
+  new URL(target);
+} catch {
+  console.error(
+    `[cron] CRON_TARGET_URL is not a usable URL: ${raw}\n` +
+      "[cron] Expected something like https://<app>.up.railway.app/api/internal/deadman",
+  );
   process.exit(1);
 }
 
