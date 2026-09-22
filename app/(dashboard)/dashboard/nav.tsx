@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { InboxIcon, BookOpenIcon, BuildingIcon, UsersIcon, HelpCircleIcon, BarChart2Icon, SirenIcon, StarIcon, MessageSquareIcon, type LucideIcon } from "lucide-react";
+import { InboxIcon, BookOpenIcon, BuildingIcon, UsersIcon, HelpCircleIcon, BarChart2Icon, SirenIcon, StarIcon, MessageSquareIcon, MegaphoneIcon, type LucideIcon } from "lucide-react";
 
 interface NavItem { href: string; label: string; icon: LucideIcon; exact?: boolean; external?: boolean; }
 interface NavSection { label: string; items: NavItem[] }
@@ -22,6 +22,7 @@ const NAV: NavSection[] = [
       { href: "/dashboard/managers", label: "Users", icon: UsersIcon },
       { href: "/dashboard/analytics", label: "Analytics", icon: BarChart2Icon },
       { href: "/dashboard/conversations", label: "Conversations", icon: MessageSquareIcon },
+      { href: "/dashboard/broadcasts", label: "Broadcasts", icon: MegaphoneIcon },
       { href: "/dashboard/urgent-requests", label: "Urgent Requests", icon: SirenIcon },
       { href: "/dashboard/interest", label: "Interest Requests", icon: StarIcon },
     ],

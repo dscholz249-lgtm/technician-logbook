@@ -192,6 +192,90 @@ export async function markAlertRead(id: number): Promise<void> {
   await apiFetch<unknown>(`/api/alerts/${id}/read`, { method: "POST" });
 }
 
+// ----------------------------------------------------------------- broadcasts
+export interface BroadcastRecipientInput {
+  employee_id: string;
+  phone: string;
+  name: string;
+  company_id: string;
+  company_name: string;
+}
+
+export interface BroadcastRecipient {
+  id: number;
+  broadcast_id: number;
+  employee_id: string | null;
+  phone: string;
+  name: string | null;
+  company_id: string | null;
+  company_name: string | null;
+  status: "queued" | "sent" | "failed";
+  twilio_sid: string | null;
+  error_code: string | null;
+  message_log_id: number | null;
+  sent_at: number | null;
+}
+
+export interface BroadcastSummary {
+  id: number;
+  body: string;
+  sent_by: string;
+  filter_json: string | null;
+  recipient_count: number;
+  status: "sending" | "complete";
+  created_at: number;
+  completed_at: number | null;
+  sent_count: number;
+  failed_count: number;
+  queued_count: number;
+}
+
+export interface BroadcastDetail extends Omit<BroadcastSummary, "sent_count" | "failed_count" | "queued_count"> {
+  recipients: BroadcastRecipient[];
+}
+
+export interface SendBroadcastResult {
+  broadcast_id: number;
+  queued: number;
+  excluded_opt_out: number;
+  replayed?: boolean;
+}
+
+export async function sendBroadcast(input: {
+  body: string;
+  sentBy: string;
+  recipients: BroadcastRecipientInput[];
+  filter?: unknown;
+  idempotencyKey: string;
+}): Promise<SendBroadcastResult> {
+  return apiFetch<SendBroadcastResult>("/api/broadcast", {
+    method: "POST",
+    body: JSON.stringify({
+      body: input.body,
+      sent_by: input.sentBy,
+      recipients: input.recipients,
+      filter: input.filter ?? null,
+      idempotency_key: input.idempotencyKey,
+    }),
+  });
+}
+
+export async function getBroadcasts(limit = 50): Promise<BroadcastSummary[]> {
+  return apiFetch<BroadcastSummary[]>(`/api/broadcasts?limit=${limit}`);
+}
+
+export async function getBroadcast(id: number): Promise<BroadcastDetail> {
+  return apiFetch<BroadcastDetail>(`/api/broadcasts/${id}`);
+}
+
+// Phones that have texted STOP — excluded from the recipient list before send.
+export async function getOptedOutPhones(phones: string[]): Promise<string[]> {
+  const filtered = phones.filter(Boolean);
+  if (filtered.length === 0) return [];
+  const params = new URLSearchParams({ phones: filtered.join(",") });
+  return apiFetch<string[]>(`/api/opt-outs?${params}`);
+}
+
 export async function markIgnored(
   id: number,
   actionedBy: string,

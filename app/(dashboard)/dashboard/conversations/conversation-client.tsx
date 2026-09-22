@@ -41,6 +41,7 @@ const STEP_LABEL: Record<string, string> = {
   "tech-no-media": "tech ack",
   "tech-media-saved": "photo saved",
   "tech-media-notify": "photo notify",
+  "broadcast": "broadcast",
 };
 
 // ----------------------------------------------------------------- sub-components
