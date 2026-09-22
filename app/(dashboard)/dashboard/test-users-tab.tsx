@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
-import { PlusIcon, PencilIcon, Trash2Icon, ArrowRightIcon, UserPlusIcon, LinkIcon } from "lucide-react";
+import { PlusIcon, PencilIcon, Trash2Icon, ArrowRightIcon, UserPlusIcon, LinkIcon, HardHatIcon } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 
 function ManagerRow({ manager, companyId }: { manager: Manager; companyId: string }) {
@@ -375,12 +375,21 @@ function CompanyForm({
   );
 }
 
-function CopyLinkButton({ companyId }: { companyId: string }) {
+function CopyLinkButton({
+  companyId,
+  role = "manager",
+}: {
+  companyId: string;
+  role?: "manager" | "technician";
+}) {
   const [copied, setCopied] = useState(false);
 
+  const isTech = role === "technician";
+  const Icon = isTech ? HardHatIcon : LinkIcon;
+
   function handleCopy() {
-    const url = `${window.location.origin}/join/${companyId}`;
-    navigator.clipboard.writeText(url).then(() => {
+    const path = isTech ? `/join/${companyId}/tech` : `/join/${companyId}`;
+    navigator.clipboard.writeText(`${window.location.origin}${path}`).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     });
@@ -391,9 +400,9 @@ function CopyLinkButton({ companyId }: { companyId: string }) {
       variant="ghost"
       size="icon-sm"
       onClick={handleCopy}
-      title={copied ? "Copied!" : "Copy invite link"}
+      title={copied ? "Copied!" : isTech ? "Copy technician link" : "Copy manager link"}
     >
-      <LinkIcon className={copied ? "text-skillcat-orange" : ""} />
+      <Icon className={copied ? "text-skillcat-orange" : ""} />
     </Button>
   );
 }
@@ -500,6 +509,7 @@ export function TestUsersTab({ companies }: { companies: CompanyWithRelations[] 
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1">
                       <CopyLinkButton companyId={c.id} />
+                      <CopyLinkButton companyId={c.id} role="technician" />
                       <Button variant="ghost" size="icon-sm" onClick={() => setEditing(c)}>
                         <PencilIcon />
                       </Button>
