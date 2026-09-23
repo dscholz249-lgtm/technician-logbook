@@ -217,12 +217,13 @@ export function BroadcastComposer({
                 <th className="p-2 font-medium">Name</th>
                 <th className="p-2 font-medium">Company</th>
                 <th className="p-2 font-medium">Role</th>
+                <th className="p-2 font-medium">Phone</th>
                 <th className="p-2 font-medium">Last active</th>
               </tr>
             </thead>
             <tbody>
               {visible.length === 0 && (
-                <tr><td colSpan={5} className="p-8 text-center text-muted-foreground text-xs">
+                <tr><td colSpan={6} className="p-8 text-center text-muted-foreground text-xs">
                   No managers match these filters.
                 </td></tr>
               )}
@@ -258,6 +259,9 @@ export function BroadcastComposer({
                     </td>
                     <td className="p-2 text-muted-foreground">{c.companyName}</td>
                     <td className="p-2 text-muted-foreground capitalize">{c.role}</td>
+                    <td className="p-2 text-muted-foreground font-mono text-xs whitespace-nowrap">
+                      {c.phone ?? "—"}
+                    </td>
                     <td className="p-2 text-muted-foreground">{formatLastActive(c.lastActiveAt)}</td>
                   </tr>
                 );
