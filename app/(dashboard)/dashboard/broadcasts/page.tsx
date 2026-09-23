@@ -57,7 +57,7 @@ export default async function BroadcastsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-semibold">Broadcasts</h1>
+        <h1 className="text-xl font-semibold">Broadcast</h1>
         <p className="text-sm text-muted-foreground mt-0.5">
           Send an SMS to managers and directors across companies. Every message is
           logged to their conversation thread.

@@ -22,7 +22,7 @@ const NAV: NavSection[] = [
       { href: "/dashboard/managers", label: "Users", icon: UsersIcon },
       { href: "/dashboard/analytics", label: "Analytics", icon: BarChart2Icon },
       { href: "/dashboard/conversations", label: "Conversations", icon: MessageSquareIcon },
-      { href: "/dashboard/broadcasts", label: "Broadcasts", icon: MegaphoneIcon },
+      { href: "/dashboard/broadcasts", label: "Broadcast", icon: MegaphoneIcon },
       { href: "/dashboard/urgent-requests", label: "Urgent Requests", icon: SirenIcon },
       { href: "/dashboard/interest", label: "Interest Requests", icon: StarIcon },
     ],

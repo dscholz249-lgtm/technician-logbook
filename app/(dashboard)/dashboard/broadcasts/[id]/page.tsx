@@ -50,7 +50,7 @@ export default async function BroadcastDetailPage({
           href="/dashboard/broadcasts"
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
         >
-          <ArrowLeftIcon className="size-3.5" /> Broadcasts
+          <ArrowLeftIcon className="size-3.5" /> Broadcast
         </Link>
         <h1 className="text-xl font-semibold mt-2">
           Broadcast #{broadcast.id}
