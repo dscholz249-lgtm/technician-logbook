@@ -2,7 +2,8 @@ import Link from "next/link";
 import { AutoRefresh } from "@/components/auto-refresh";
 import { createClient } from "@/lib/supabase/server";
 import { getManagerByEmail, getCompanies } from "@/lib/supabase/db";
-import { getManagerOwnLogbook } from "@/lib/api";
+import { getManagerOwnLogbook, getOptedOutPhones } from "@/lib/api";
+import { OptOutModal } from "@/components/opt-out-modal";
 import { LogbookGrid } from "./logbook-card";
 import { BookOpenIcon, MessageSquareIcon } from "lucide-react";
 import { cookies } from "next/headers";
@@ -40,8 +41,16 @@ export default async function ManagerHomePage() {
 
   const preview = ownEntries.slice(0, 4);
 
+  const optedOut = manager.phone
+    ? (await getOptedOutPhones([manager.phone]).catch(() => [])).length > 0
+    : false;
+
   return (
     <div className="space-y-8">
+      {optedOut && manager.phone && (
+        <OptOutModal smsNumber={SKILLCAT_SMS_NUMBER} phone={manager.phone} />
+      )}
+
       {/* Page header */}
       <div>
         <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-1">

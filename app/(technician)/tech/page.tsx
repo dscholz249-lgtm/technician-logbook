@@ -1,9 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
 import { getTechnicianByEmail } from "@/lib/supabase/db";
-import { getLogbook, getTechnicianMedia } from "@/lib/api";
+import { getLogbook, getTechnicianMedia, getOptedOutPhones } from "@/lib/api";
 import { AutoRefresh } from "@/components/auto-refresh";
 import { TechPhoneForm } from "./tech-phone-form";
 import { PhoneRequiredModal } from "@/components/phone-required-modal";
+import { OptOutModal } from "@/components/opt-out-modal";
 import { saveTechPhone } from "./actions";
 import { ContactCardSection } from "@/app/(manager)/manager/contact-card-section";
 import { CameraIcon, MessageSquareIcon, PhoneIcon } from "lucide-react";
@@ -59,9 +60,10 @@ export default async function TechPortalPage() {
   const technician = await getTechnicianByEmail(effectiveEmail);
   if (!technician) return null;
 
-  const [logbook, media] = await Promise.all([
+  const [logbook, media, optedOutPhones] = await Promise.all([
     getLogbook(technician.company_id, undefined, technician.id).catch(() => [] as LogbookEntry[]),
     getTechnicianMedia(technician.company_id, technician.id, technician.phone).catch(() => [] as TechnicianMedia[]),
+    technician.phone ? getOptedOutPhones([technician.phone]).catch(() => [] as string[]) : Promise.resolve([] as string[]),
   ]);
 
   // Build a unified timeline: logbook entries (which already include media URLs in body JSON)
@@ -77,6 +79,10 @@ export default async function TechPortalPage() {
         smsNumber={SKILLCAT_SMS_NUMBER}
         action={saveTechPhone}
       />
+
+      {optedOutPhones.length > 0 && technician.phone && (
+        <OptOutModal smsNumber={SKILLCAT_SMS_NUMBER} phone={technician.phone} />
+      )}
 
       {/* Profile header */}
       <div>
