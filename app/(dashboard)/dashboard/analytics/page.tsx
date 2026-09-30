@@ -1,6 +1,7 @@
 import { getCompanies } from "@/lib/supabase/db";
-import { getGlobalAnalytics } from "@/lib/api";
+import { getGlobalAnalytics, getRequestActivity } from "@/lib/api";
 import { AnalyticsCharts } from "./analytics-charts";
+import { ActivityChart } from "./activity-chart";
 
 export const dynamic = "force-dynamic";
 
@@ -16,9 +17,10 @@ function pct(value: number | null) {
 }
 
 export default async function AnalyticsPage() {
-  const [analytics, companies] = await Promise.all([
+  const [analytics, companies, activity] = await Promise.all([
     getGlobalAnalytics().catch(() => null),
     getCompanies().catch(() => []),
+    getRequestActivity().catch(() => []),
   ]);
 
   const ret = analytics?.retention;
@@ -48,6 +50,9 @@ export default async function AnalyticsPage() {
         <RetentionCard label="7-day retention" value={pct(ret?.day_7 ?? null)} />
         <RetentionCard label="30-day retention" value={pct(ret?.day_30 ?? null)} />
       </div>
+
+      {/* Request volume by category (PRD-274) */}
+      <ActivityChart data={activity} />
 
       {/* Charts */}
       {analytics ? (

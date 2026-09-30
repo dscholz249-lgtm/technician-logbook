@@ -98,6 +98,26 @@ export async function getGlobalAnalytics(): Promise<GlobalAnalyticsData> {
   return apiFetch<GlobalAnalyticsData>("/api/analytics/global");
 }
 
+/** One UTC day's worth of the three request categories (PRD-274). */
+export interface ActivityPoint {
+  date: string;
+  images: number;
+  curriculum: number;
+  other: number;
+}
+
+/**
+ * Per-day activity for all history. Express returns only the daily grain —
+ * monthly, annual and all-time are rollups of these rows, so the period
+ * toggle aggregates in the browser instead of refetching.
+ */
+export async function getRequestActivity(): Promise<ActivityPoint[]> {
+  const res = await apiFetch<{ daily: ActivityPoint[] }>(
+    "/api/analytics/activity",
+  );
+  return res.daily ?? [];
+}
+
 // Returns a map of phone → ISO timestamp of last inbound message.
 export async function getLastActiveByPhones(
   phones: string[],
