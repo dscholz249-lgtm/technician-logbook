@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCompanies } from "@/lib/supabase/db";
-import { getLastActiveByPhones } from "@/lib/api";
+import { getLastActiveByPhones, getRequestActivity } from "@/lib/api";
 import { labsEventReporting } from "@/lib/labs-console";
 
 /**
@@ -96,7 +96,42 @@ export async function POST(req: NextRequest) {
     breakdown,
   });
 
+  // Request volume by category (PRD-274), as its own event rather than a field
+  // on metrics.daily: metrics_daily.breakdown is user composition, and these
+  // are counts of things done, not people. A separate event also means a
+  // failure here cannot cost us the user snapshot above, which is why it is
+  // sent second and reported separately.
+  //
+  // A day with no activity sends explicit zeros. Omitting the event would be
+  // indistinguishable from the cron not running, and the Console's rule is
+  // that a missing metric reads as unwired rather than quiet.
+  let requestActivity: {
+    images: number;
+    curriculum_lookups: number;
+    other_requests: number;
+  } | null = null;
+  let activitySent: Awaited<ReturnType<typeof labsEventReporting>> | null = null;
+
+  try {
+    const daily = await getRequestActivity();
+    const row = daily.find((d) => d.date === asOfDate);
+    requestActivity = {
+      images: row?.images ?? 0,
+      curriculum_lookups: row?.curriculum ?? 0,
+      other_requests: row?.other ?? 0,
+    };
+    activitySent = await labsEventReporting("metrics.activity.daily", {
+      as_of_date: asOfDate,
+      ...requestActivity,
+    });
+  } catch (err) {
+    console.warn("[labs-metrics] request activity unavailable", err);
+  }
+
   return NextResponse.json({
+    request_activity: requestActivity,
+    request_activity_accepted: activitySent?.ok ?? false,
+    request_activity_status: activitySent?.status ?? null,
     console_accepted: sent.ok,
     console_status: sent.status,
     console_response: sent.body,

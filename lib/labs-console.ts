@@ -26,7 +26,12 @@ export type LabsEventType =
   | "user.registered"
   | "user.updated"
   | "user.removed"
-  | "metrics.daily";
+  | "metrics.daily"
+  // Request volume by category (PRD-274). The Console stores unknown event
+  // types and ignores them until it ships support, so emitting this before
+  // the Console renders it loses nothing — the events are already in its
+  // `events` table when the reader lands.
+  | "metrics.activity.daily";
 
 export async function labsEvent(
   eventType: LabsEventType,
