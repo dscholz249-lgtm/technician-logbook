@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { getManagerByEmail, getTechnicianByEmail } from "@/lib/supabase/db";
-import { env, isAdmin } from "@/lib/env";
+import { env } from "@/lib/env";
+import { resolveHomePath } from "@/lib/home-path";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
@@ -49,19 +49,11 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${origin}/auth/sign-in?error=no_user`);
   }
 
-  const userIsAdmin = isAdmin(user.email);
-  if (userIsAdmin) {
-    return NextResponse.redirect(`${origin}/dashboard`);
-  }
-
-  const manager = await getManagerByEmail(user.email).catch(() => null);
-  if (manager) {
-    return NextResponse.redirect(`${origin}/manager`);
-  }
-
-  const technician = await getTechnicianByEmail(user.email).catch(() => null);
-  if (technician) {
-    return NextResponse.redirect(`${origin}/tech`);
+  // Shared with the public landing page's CTA so the two cannot disagree
+  // about where this person belongs.
+  const home = await resolveHomePath(user.email);
+  if (home) {
+    return NextResponse.redirect(`${origin}${home}`);
   }
 
   await supabase.auth.signOut();
