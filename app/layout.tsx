@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Fira_Sans, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
+import { GoogleAnalytics } from "@/components/google-analytics";
 
 const firaSans = Fira_Sans({
   variable: "--font-fira-sans",
@@ -31,6 +32,7 @@ export default function RootLayout({
     >
       <body className="min-h-full bg-background text-foreground">
         <Providers>{children}</Providers>
+        <GoogleAnalytics />
       </body>
     </html>
   );
