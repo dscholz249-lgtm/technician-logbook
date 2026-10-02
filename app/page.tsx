@@ -81,11 +81,10 @@ export default async function LandingPage() {
           </Link>
         </div>
 
-        {/* Header */}
+        {/* Header — no "Early access" pill here. The In Beta badge in the top
+            bar says the same thing in the same colour, and two orange pills a
+            hundred pixels apart compete rather than reinforce. */}
         <div className="text-center space-y-3">
-          <span className="inline-block rounded-full border border-skillcat-orange/30 bg-skillcat-orange/10 px-3 py-1 text-xs font-semibold text-skillcat-orange tracking-wide uppercase">
-            Early access
-          </span>
           <h1 className="text-2xl sm:text-3xl font-semibold text-foreground leading-tight">
             SMS-powered field team management
           </h1>
