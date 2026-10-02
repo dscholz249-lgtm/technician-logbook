@@ -6,6 +6,7 @@ import { getTechnicianByEmail } from "@/lib/supabase/db";
 import { env, isAdmin } from "@/lib/env";
 import { ImpersonationBanner } from "@/app/(manager)/impersonation-banner";
 import type { ImpersonateCookie } from "@/app/(dashboard)/dashboard/managers/impersonate-actions";
+import { BetaBadge } from "@/components/beta-badge";
 
 export default async function TechnicianLayout({
   children,
@@ -44,9 +45,12 @@ export default async function TechnicianLayout({
         <ImpersonationBanner name={impersonating.name} role={impersonating.role} />
       )}
       <header className="border-b border-border bg-card px-6 py-3 flex items-center justify-between">
-        <Link href="/tech">
-          <img src="/images/skillcat-labs-logo.png" alt="SkillCat Labs" className="h-7 w-auto" />
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link href="/tech">
+            <img src="/images/skillcat-labs-logo.png" alt="SkillCat Labs" className="h-7 w-auto" />
+          </Link>
+          <BetaBadge />
+        </div>
         <div className="flex items-center gap-3">
           <span className="text-xs text-muted-foreground hidden sm:block">
             {impersonating ? impersonating.email : user.email}

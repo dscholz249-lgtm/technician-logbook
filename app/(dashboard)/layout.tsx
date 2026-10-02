@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { env, isAdmin } from "@/lib/env";
 import { Nav } from "./dashboard/nav";
+import { BetaBadge } from "@/components/beta-badge";
 
 export default async function DashboardLayout({
   children,
@@ -21,10 +22,11 @@ export default async function DashboardLayout({
     <div className="min-h-screen flex">
       {/* Sidebar */}
       <aside className="w-52 shrink-0 border-r border-border bg-card flex flex-col">
-        <div className="px-4 py-4 border-b border-border flex items-center">
+        <div className="px-4 py-4 border-b border-border flex items-center gap-2">
           <Link href="/dashboard">
             <img src="/images/skillcat-labs-logo.png" alt="SkillCat Labs" className="h-7 w-auto" />
           </Link>
+          <BetaBadge />
         </div>
         <div className="flex-1 overflow-y-auto px-2">
           <Nav />

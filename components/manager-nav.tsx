@@ -8,6 +8,7 @@ import {
   SettingsIcon, MenuIcon, XIcon,
 } from "lucide-react";
 import { RequestHelpButton } from "@/app/(manager)/manager/request-help-button";
+import { BetaBadge } from "@/components/beta-badge";
 
 const PRIMARY_NAV = [
   { href: "/manager", label: "Home", icon: HomeIcon, exact: true },
@@ -68,9 +69,12 @@ export function ManagerNav({ companyName, managerName, email }: ManagerNavProps)
     <div className="flex flex-col h-full">
       {/* Brand */}
       <div className="px-4 py-6 border-b border-border">
-        <Link href="/manager" onClick={close} className="flex items-center gap-2.5">
-          <img src="/images/skillcat-labs-logo.png" alt="SkillCat Labs" className="h-6 w-auto" />
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link href="/manager" onClick={close} className="flex items-center gap-2.5">
+            <img src="/images/skillcat-labs-logo.png" alt="SkillCat Labs" className="h-6 w-auto" />
+          </Link>
+          <BetaBadge />
+        </div>
       </div>
 
       {/* Primary nav */}

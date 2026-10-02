@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { resolveHomePath } from "@/lib/home-path";
 import { InterestForm } from "./interest/interest-form";
+import { BetaBadge } from "@/components/beta-badge";
 
 export const dynamic = "force-dynamic";
 
@@ -64,11 +65,14 @@ export default async function LandingPage() {
 
         {/* Top bar — the only nav this page has */}
         <div className="flex items-center justify-between gap-4">
-          <img
-            src="/images/skillcat-labs-logo.png"
-            alt="SkillCat Labs"
-            className="h-7 w-auto"
-          />
+          <div className="flex items-center gap-2">
+            <img
+              src="/images/skillcat-labs-logo.png"
+              alt="SkillCat Labs"
+              className="h-7 w-auto"
+            />
+            <BetaBadge />
+          </div>
           <Link
             href={cta.href}
             className="inline-flex items-center rounded-md border border-border px-3.5 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-muted"
