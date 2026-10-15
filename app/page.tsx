@@ -13,8 +13,6 @@ export const metadata: Metadata = {
     "Assign training, capture job site photos, and keep technician records over SMS. No app for your field team. Request early access.",
 };
 
-const LOOM_VIDEO_ID = "ba5b0395f2044d4bac604951dcc83a64";
-
 const FEATURES = [
   {
     title: "Assign training via SMS",
@@ -99,32 +97,28 @@ export default async function LandingPage() {
           <p className="text-xs font-semibold tracking-widest uppercase text-muted-foreground/60 text-center">
             See it in action
           </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <div className="rounded-xl overflow-hidden border border-border aspect-video">
-                <iframe
-                  src={`https://www.loom.com/embed/${LOOM_VIDEO_ID}?hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true`}
-                  allowFullScreen
-                  className="w-full h-full"
-                />
-              </div>
-              <p className="text-xs text-center text-muted-foreground font-medium">
-                Manager experience
-              </p>
-            </div>
-            <div className="space-y-2">
-              <div className="rounded-xl overflow-hidden border border-border aspect-video bg-muted">
-                <video
-                  src="/Tech-upload.mp4"
-                  controls
-                  playsInline
-                  className="w-full h-full object-contain"
-                />
-              </div>
-              <p className="text-xs text-center text-muted-foreground font-medium">
-                Technician experience
-              </p>
-            </div>
+          {/* One sizzle reel, cut twice: 16:9 from md up, 9:16 below it so a
+              phone gets a full-height video rather than a letterboxed strip.
+              One element with media-matched sources, not two toggled with
+              `hidden`, so a phone downloads one file rather than both. A
+              browser that ignores `media` takes the first source — the 16:9
+              cut, which still reads fine letterboxed on the white box.
+              Muted autoplay because browsers refuse autoplay with sound; the
+              controls are there to unmute, since the reel is scored. */}
+          <div className="mx-auto max-w-sm md:max-w-none rounded-xl overflow-hidden border border-border aspect-[9/16] md:aspect-video bg-white">
+            <video
+              poster="/videos/logbook-sizzle-poster.jpg"
+              autoPlay
+              muted
+              loop
+              playsInline
+              controls
+              preload="metadata"
+              className="w-full h-full"
+            >
+              <source src="/videos/logbook-sizzle-web.mp4" type="video/mp4" media="(min-width: 768px)" />
+              <source src="/videos/logbook-sizzle-social.mp4" type="video/mp4" />
+            </video>
           </div>
         </div>
 
