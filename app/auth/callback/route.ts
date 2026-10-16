@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { env } from "@/lib/env";
 import { resolveHomePath } from "@/lib/home-path";
+import { takeReturnPath } from "@/lib/return-path";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
@@ -52,6 +53,10 @@ export async function GET(request: NextRequest) {
   // Shared with the public landing page's CTA so the two cannot disagree
   // about where this person belongs.
   const home = await resolveHomePath(user.email);
+  const returnTo = await takeReturnPath();
+  if (home === "/dashboard" && returnTo) {
+    return NextResponse.redirect(`${origin}${returnTo}`);
+  }
   if (home) {
     return NextResponse.redirect(`${origin}${home}`);
   }

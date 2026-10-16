@@ -5,9 +5,9 @@ export const dynamic = "force-dynamic";
 export default async function SignInPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; next?: string; reason?: string }>;
 }) {
-  const { error } = await searchParams;
+  const { error, next, reason } = await searchParams;
   return (
     <main className="min-h-screen flex items-center justify-center bg-zinc-950 text-zinc-100 px-6">
       <div className="w-full max-w-sm">
@@ -29,7 +29,13 @@ export default async function SignInPage({
           </div>
         )}
 
-        <SignInForm />
+        {reason === "link-expired" && !error && (
+          <div className="mb-4 rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-300">
+            That Slack link has expired. Sign in and we&apos;ll take you back to the request.
+          </div>
+        )}
+
+        <SignInForm returnTo={next} />
       </div>
     </main>
   );

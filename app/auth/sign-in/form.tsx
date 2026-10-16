@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export default function SignInForm() {
+export default function SignInForm({ returnTo }: { returnTo?: string }) {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -16,7 +16,7 @@ export default function SignInForm() {
     e.preventDefault();
     setError(null);
     startTransition(async () => {
-      const result = await sendMagicLink(email);
+      const result = await sendMagicLink(email, returnTo);
       if (result.error) {
         setError(result.error);
       } else {

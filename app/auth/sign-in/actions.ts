@@ -3,9 +3,11 @@
 import { createClient } from "@/lib/supabase/server";
 import { getManagerByEmail, getTechnicianByEmail } from "@/lib/supabase/db";
 import { env, isAdmin } from "@/lib/env";
+import { rememberReturnPath } from "@/lib/return-path";
 
 export async function sendMagicLink(
   email: string,
+  returnTo?: string,
 ): Promise<{ error?: string }> {
   const normalized = email.trim().toLowerCase();
 
@@ -29,5 +31,8 @@ export async function sendMagicLink(
     const msg = error.message && error.message !== "{}" ? error.message : "Failed to send magic link. Check your email configuration.";
     return { error: msg };
   }
+  // Only admins can use the deep-linked pages; managers and techs keep their
+  // normal landing page.
+  if (userIsAdmin) await rememberReturnPath(returnTo);
   return {};
 }

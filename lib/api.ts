@@ -1,6 +1,6 @@
 import "server-only";
 import { env } from "./env";
-import type { QueueItem, LogbookEntry, MessageLogEntry } from "./types";
+import type { QueueItem, QueueItemDetail, LogbookEntry, MessageLogEntry } from "./types";
 
 async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const url = `${env.EXPRESS_API_URL}${path}`;
@@ -15,9 +15,32 @@ async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
     cache: "no-store",
   });
   if (!res.ok) {
-    throw new Error(`Express API ${path} returned ${res.status}`);
+    // Surface the server's own message when it sends one (e.g. 409 "Already
+    // completed by …") so the dashboard toast says what actually happened.
+    const body = (await res.json().catch(() => null)) as { error?: unknown } | null;
+    throw new ApiError(
+      typeof body?.error === "string" ? body.error : `Express API ${path} returned ${res.status}`,
+      res.status,
+    );
   }
   return res.json() as Promise<T>;
+}
+
+export class ApiError extends Error {
+  constructor(message: string, readonly status: number) {
+    super(message);
+  }
+}
+
+// One request plus the sending manager's name/company, or null if it doesn't
+// exist.
+export async function getQueueItem(id: number): Promise<QueueItemDetail | null> {
+  try {
+    return await apiFetch<QueueItemDetail>(`/api/queue/${id}`);
+  } catch (err) {
+    if (err instanceof ApiError && err.status === 404) return null;
+    throw err;
+  }
 }
 
 export async function getQueue(

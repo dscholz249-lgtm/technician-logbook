@@ -1,4 +1,4 @@
-export type ActionType = "assign_training" | "add_employee";
+export type ActionType = "assign_training" | "add_employee" | "human_review";
 export type ActionStatus = "pending" | "actioned" | "ignored" | "failed";
 
 export interface QueueItem {
@@ -12,6 +12,10 @@ export interface QueueItem {
   actioned_note: string | null;
   created_at: number; // Unix ms
   actioned_at: number | null;
+}
+
+export interface QueueItemDetail extends QueueItem {
+  manager: { name: string; company_id: string | null; company_name: string | null } | null;
 }
 
 export interface LogbookEntry {

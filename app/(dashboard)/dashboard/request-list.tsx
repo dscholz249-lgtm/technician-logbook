@@ -69,17 +69,24 @@ function RequestActions({ item }: { item: QueueItem }) {
     });
   }
 
+  // Ignore isn't final — an ignored request can still be completed.
+  const ignored = item.status === "ignored";
+
   return (
     <div className="flex items-center gap-1.5 shrink-0">
-      <Button
-        size="sm"
-        variant="ghost"
-        onClick={handleIgnore}
-        disabled={pending}
-        className="text-muted-foreground text-xs px-2"
-      >
-        Ignore
-      </Button>
+      {ignored ? (
+        <span className="text-xs text-muted-foreground px-2">Ignored</span>
+      ) : (
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={handleIgnore}
+          disabled={pending}
+          className="text-muted-foreground text-xs px-2"
+        >
+          Ignore
+        </Button>
+      )}
       <Button size="sm" onClick={handleComplete} disabled={pending}>
         {pending ? "Saving…" : "Mark Complete"}
       </Button>
@@ -90,7 +97,8 @@ function RequestActions({ item }: { item: QueueItem }) {
 function RequestRow({ item }: { item: UnifiedItem }) {
   const { name, description } = itemDescription(item);
   const isAction = item.kind === "action";
-  const isPending = isAction && (item.data as QueueItem).status === "pending";
+  const status = isAction ? (item.data as QueueItem).status : null;
+  const isActionable = status === "pending" || status === "ignored";
   const ts = item.kind === "action" ? item.data.created_at : item.data.created_at;
 
   return (
@@ -112,7 +120,7 @@ function RequestRow({ item }: { item: UnifiedItem }) {
         <p className="text-sm text-muted-foreground mt-0.5">{description}</p>
       </div>
       <div className="shrink-0">
-        {isPending
+        {isActionable
           ? <RequestActions item={item.data as QueueItem} />
           : <span className="text-xs text-muted-foreground">No action needed</span>}
       </div>
