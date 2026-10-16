@@ -25,7 +25,7 @@ export async function submitUrgentRequest(
       company_id: company.id,
       manager_id: manager.id,
       manager_name: manager.name,
-      manager_email: manager.email,
+      manager_email: user.email,
       company_name: company.name,
       message: message.trim(),
     });

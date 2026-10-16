@@ -41,16 +41,16 @@ function parseCsv(raw: string): { name: string; email: string | null; title: str
 }
 
 // Parses "name, email, phone" rows for directors/managers (one per line)
-function parsePersonCsv(raw: string): { name: string; email: string; phone: string | null }[] {
+function parsePersonCsv(raw: string): { name: string; email: string | null; phone: string | null }[] {
   return raw
     .split("\n")
     .map(line => line.trim())
     .filter(line => line && !line.toLowerCase().startsWith("name"))
     .map(line => {
       const [name, email, phone] = line.split(",").map(f => f.trim());
-      return { name: name || "", email: (email || "").toLowerCase(), phone: phone || null };
+      return { name: name || "", email: email?.toLowerCase() || null, phone: phone || null };
     })
-    .filter(r => r.name && r.email);
+    .filter(r => r.name);
 }
 
 // Strips surrounding quotes from a CSV field (handles Excel/Sheets exports)
@@ -63,7 +63,7 @@ function unquote(s: string): string {
 function parseAllPeopleCsv(raw: string): {
   role: "director" | "manager" | "technician";
   name: string;
-  email: string;
+  email: string | null;
   phone: string | null;
   title: string | null;
 }[] {
@@ -81,11 +81,11 @@ function parseAllPeopleCsv(raw: string): {
       const [role, name, email, extra] = parts;
       const r = role?.toLowerCase();
       if (r !== "director" && r !== "manager" && r !== "technician") return null;
-      if (!name || !email) return null;
+      if (!name) return null;
       return {
         role: r as "director" | "manager" | "technician",
         name,
-        email: email.toLowerCase(),
+        email: email?.toLowerCase() || null,
         phone: r !== "technician" ? (extra || null) : null,
         title: r === "technician" ? (extra || null) : null,
       };
@@ -104,7 +104,7 @@ export async function saveCompany(formData: FormData): Promise<{ error?: string 
   if (!companyName) return { error: "Company name is required." };
 
   // Pre-parse and validate staffing before touching the DB
-  type PersonRow = { name: string; email: string; phone: string | null };
+  type PersonRow = { name: string; email: string | null; phone: string | null };
   let createDirectors: PersonRow[] = [];
   let createManagers: PersonRow[] = [];
   let createTechs: { name: string; email: string | null; title: string | null }[] = [];
@@ -160,13 +160,13 @@ export async function addManager(formData: FormData): Promise<{ error?: string }
   await requireAdmin();
   const companyId = formData.get("company_id") as string;
   const name = (formData.get("manager_name") as string)?.trim();
-  const email = (formData.get("manager_email") as string)?.trim().toLowerCase();
+  const email = (formData.get("manager_email") as string)?.trim().toLowerCase() || null;
   const phone = (formData.get("manager_phone") as string)?.trim() || null;
   const roleRaw = (formData.get("manager_role") as string) || "manager";
   const role = roleRaw === "director" ? "director" as const : "manager" as const;
 
-  if (!companyId || !name || !email) {
-    return { error: "Name and email are required." };
+  if (!companyId || !name) {
+    return { error: "Name and company are required." };
   }
 
   try {
@@ -248,13 +248,13 @@ export async function updateUser(formData: FormData): Promise<{ error?: string }
   const managerId = formData.get("manager_id") as string;
   const companyId = formData.get("company_id") as string;
   const name = (formData.get("manager_name") as string)?.trim();
-  const email = (formData.get("manager_email") as string)?.trim().toLowerCase();
+  const email = (formData.get("manager_email") as string)?.trim().toLowerCase() || null;
   const phone = (formData.get("manager_phone") as string)?.trim() || null;
   const roleRaw = (formData.get("manager_role") as string) || "manager";
   const role = roleRaw === "director" ? "director" as const : "manager" as const;
 
-  if (!managerId || !name || !email) {
-    return { error: "Name and email are required." };
+  if (!managerId || !name) {
+    return { error: "Name is required." };
   }
 
   try {
@@ -314,13 +314,13 @@ export async function adminUpdateUser(formData: FormData): Promise<{ error?: str
   const oldCompanyId = (formData.get("old_company_id") as string)?.trim();
   const companyId = (formData.get("company_id") as string)?.trim();
   const name = (formData.get("name") as string)?.trim();
-  const email = (formData.get("email") as string)?.trim().toLowerCase();
+  const email = (formData.get("email") as string)?.trim().toLowerCase() || null;
   const phone = (formData.get("phone") as string)?.trim() || null;
   const roleRaw = (formData.get("role") as string) || "manager";
   const title = (formData.get("title") as string)?.trim() || null;
 
-  if (!userId || !companyId || !name || !email) {
-    return { error: "Name, email, and company are required." };
+  if (!userId || !companyId || !name) {
+    return { error: "Name and company are required." };
   }
 
   const newRole = roleRaw as "director" | "manager" | "technician";

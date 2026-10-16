@@ -17,7 +17,7 @@ export interface Manager {
   id: string;
   company_id: string;
   name: string;
-  email: string;
+  email: string | null;
   phone: string | null;
   role: ManagerRole;
   reminder_preference: ReminderPreference;
@@ -128,7 +128,7 @@ import { labsEventDetached, technicianExternalId } from "@/lib/labs-console";
 // ----------------------------------------------------------------- managers
 export async function upsertManager(
   companyId: string,
-  data: { name: string; email: string; phone?: string | null; role?: ManagerRole },
+  data: { name: string; email: string | null; phone?: string | null; role?: ManagerRole },
   managerId?: string,
 ): Promise<Manager> {
   const db = createAdminClient();

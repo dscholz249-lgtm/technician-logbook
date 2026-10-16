@@ -43,8 +43,8 @@ export function DirectorAddManager() {
                 <Input id="dir_name" name="manager_name" required />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="dir_email">Email</Label>
-                <Input id="dir_email" name="manager_email" type="email" required />
+                <Label htmlFor="dir_email">Email <span className="text-muted-foreground text-xs">(optional)</span></Label>
+                <Input id="dir_email" name="manager_email" type="email" />
               </div>
             </div>
             <div className="space-y-1.5">

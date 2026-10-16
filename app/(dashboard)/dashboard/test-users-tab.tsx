@@ -37,7 +37,7 @@ function ManagerRow({ manager, companyId }: { manager: Manager; companyId: strin
     <div className="flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-muted/40 group">
       <div className="min-w-0">
         <p className="text-sm font-medium truncate">{manager.name}</p>
-        <p className="text-xs text-muted-foreground truncate">{manager.email}{manager.phone ? ` · ${manager.phone}` : ""}</p>
+        <p className="text-xs text-muted-foreground truncate">{[manager.email, manager.phone].filter(Boolean).join(" · ")}</p>
       </div>
       <div className="flex items-center gap-1 ml-2 shrink-0">
         {confirming ? (
@@ -103,8 +103,8 @@ function AddManagerForm({ companyId, onAdded }: { companyId: string; onAdded: ()
           <Input id="add_manager_name" name="manager_name" required className="h-8 text-sm" />
         </div>
         <div className="space-y-1">
-          <Label htmlFor="add_manager_email" className="text-xs">Email</Label>
-          <Input id="add_manager_email" name="manager_email" type="email" required className="h-8 text-sm" />
+          <Label htmlFor="add_manager_email" className="text-xs">Email <span className="text-muted-foreground">(optional)</span></Label>
+          <Input id="add_manager_email" name="manager_email" type="email" className="h-8 text-sm" />
         </div>
       </div>
       <div className="space-y-1">

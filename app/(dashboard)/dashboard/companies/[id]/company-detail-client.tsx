@@ -92,7 +92,7 @@ function ManagerRow({ manager, companyId }: { manager: Manager; companyId: strin
       </div>
       <div>
         <p className="text-xs text-muted-foreground mb-0.5">Email</p>
-        <p className="text-sm">{manager.email}</p>
+        <p className="text-sm">{manager.email ?? <span className="text-muted-foreground">Not set</span>}</p>
       </div>
       <div className="flex items-start justify-between">
         <div>
@@ -161,8 +161,8 @@ function AddManagerModal({
               <Input id="am_name" name="manager_name" required />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="am_email">Email</Label>
-              <Input id="am_email" name="manager_email" type="email" required />
+              <Label htmlFor="am_email">Email <span className="text-muted-foreground text-xs">(optional)</span></Label>
+              <Input id="am_email" name="manager_email" type="email" />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">

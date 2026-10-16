@@ -26,10 +26,10 @@ export async function addManagerAsDirector(
   }
 
   const name = (formData.get("manager_name") as string)?.trim();
-  const email = (formData.get("manager_email") as string)?.trim().toLowerCase();
+  const email = (formData.get("manager_email") as string)?.trim().toLowerCase() || null;
   const phone = (formData.get("manager_phone") as string)?.trim() || null;
 
-  if (!name || !email) return { error: "Name and email are required." };
+  if (!name) return { error: "Name is required." };
 
   try {
     await upsertManager(companyId, { name, email, phone, role: "manager" });

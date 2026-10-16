@@ -19,7 +19,7 @@ interface ManagerRow {
   id: string;
   company_id: string;
   name: string;
-  email: string;
+  email: string | null;
   phone: string | null;
   role: ManagerRole;
   reminder_preference: string | null;
@@ -88,8 +88,8 @@ function EditUserModal({
               <Input id="eu_name" name="name" defaultValue={user.name} required />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="eu_email">Email</Label>
-              <Input id="eu_email" name="email" type="email" defaultValue={user.email ?? ""} required />
+              <Label htmlFor="eu_email">Email <span className="text-muted-foreground text-xs">(optional)</span></Label>
+              <Input id="eu_email" name="email" type="email" defaultValue={user.email ?? ""} />
             </div>
           </div>
 

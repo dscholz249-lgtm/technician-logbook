@@ -59,8 +59,8 @@ export function AddManagerModal({ companies }: { companies: Company[] }) {
                 <Input id="fm_name" name="manager_name" required />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="fm_email">Email</Label>
-                <Input id="fm_email" name="manager_email" type="email" required />
+                <Label htmlFor="fm_email">Email <span className="text-muted-foreground text-xs">(optional)</span></Label>
+                <Input id="fm_email" name="manager_email" type="email" />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
