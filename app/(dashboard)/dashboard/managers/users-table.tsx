@@ -321,7 +321,7 @@ export function UsersTable({
                       >
                         <PencilIcon />
                       </Button>
-                      {u.kind === "manager" && <InviteButton managerId={u.id} />}
+                      {u.kind === "manager" && u.email && <InviteButton managerId={u.id} />}
                     </div>
                   </TableCell>
                 </TableRow>

@@ -2,10 +2,17 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
+import { MailIcon } from "lucide-react";
 import { sendManagerInvite, getInviteEmailPreview } from "./actions";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
+/**
+ * Preview-then-send for the manager invite email. Managers and directors share
+ * it (both are rows in `managers`). Used on the People table and on each
+ * company's Managers section, and styled like TechInviteButton so the two
+ * read as the same action.
+ */
 export function InviteButton({ managerId }: { managerId: string }) {
   const [state, setState] = useState<"idle" | "loading" | "preview" | "sending" | "sent">("idle");
   const [preview, setPreview] = useState<{ html: string; firstName: string; email: string } | null>(null);
@@ -35,19 +42,18 @@ export function InviteButton({ managerId }: { managerId: string }) {
     }
   }
 
-  if (state === "sent") {
-    return <span className="text-xs text-green-500 font-medium">Sent</span>;
-  }
-
   return (
     <>
-      <button
+      <Button
+        variant="ghost"
+        size="sm"
+        className="text-xs text-muted-foreground hover:text-foreground"
         onClick={handleOpenPreview}
-        disabled={state === "loading"}
-        className="text-xs text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+        disabled={state === "loading" || state === "sending" || state === "sent"}
       >
-        {state === "loading" ? "Loading…" : "Send invite"}
-      </button>
+        <MailIcon className="size-3.5 mr-1" />
+        {state === "loading" ? "Loading…" : state === "sent" ? "Sent" : "Send invite"}
+      </Button>
 
       <Dialog open={state === "preview" || state === "sending"} onOpenChange={(open) => { if (!open) setState("idle"); }}>
         <DialogContent className="max-w-2xl h-[80vh] flex flex-col p-0 gap-0">

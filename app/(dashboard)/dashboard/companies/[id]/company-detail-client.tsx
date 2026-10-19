@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { PencilIcon, PlusIcon, Trash2Icon } from "lucide-react";
 import { TechInviteButton } from "@/components/tech-invite-button";
+import { InviteButton } from "../../managers/invite-button";
 
 // ----------------------------------------------------------------- Company info
 
@@ -88,7 +89,12 @@ function ManagerRow({ manager, companyId }: { manager: Manager; companyId: strin
     <div className="px-5 py-4 grid grid-cols-3 gap-4 group relative">
       <div>
         <p className="text-xs text-muted-foreground mb-0.5">Name</p>
-        <p className="text-sm font-medium">{manager.name}</p>
+        <p className="text-sm font-medium">
+          {manager.name}
+          <span className="ml-1.5 text-xs font-normal text-muted-foreground">
+            {manager.role === "director" ? "Director" : "Manager"}
+          </span>
+        </p>
       </div>
       <div>
         <p className="text-xs text-muted-foreground mb-0.5">Email</p>
@@ -109,14 +115,19 @@ function ManagerRow({ manager, companyId }: { manager: Manager; companyId: strin
               <Button size="sm" variant="outline" onClick={() => setConfirming(false)} disabled={pending}>No</Button>
             </>
           ) : (
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              className="opacity-0 group-hover:opacity-100 transition-opacity"
-              onClick={() => setConfirming(true)}
-            >
-              <Trash2Icon />
-            </Button>
+            <>
+              {/* Always visible, unlike remove: inviting is the next step
+                  after adding a manager or director, not a hidden extra. */}
+              {manager.email && <InviteButton managerId={manager.id} />}
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                className="opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={() => setConfirming(true)}
+              >
+                <Trash2Icon />
+              </Button>
+            </>
           )}
         </div>
       </div>
