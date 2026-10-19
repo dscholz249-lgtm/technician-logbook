@@ -1,7 +1,12 @@
 "use server";
 
 import { createInterestRequest } from "@/lib/supabase/db";
-import { notifySlack, interestRequestBlocks } from "@/lib/slack";
+import {
+  notifySlack,
+  interestRequestBlocks,
+  notifyExperimentChannel,
+  interestExperimentNotification,
+} from "@/lib/slack";
 
 export async function submitInterestRequest(
   formData: FormData,
@@ -18,9 +23,11 @@ export async function submitInterestRequest(
 
   try {
     await createInterestRequest({ name, email, company_name: companyName, team_size: teamSize });
-    await notifySlack(
-      interestRequestBlocks({ name, email, companyName: companyName ?? null, teamSize: teamSize ?? null }),
-    );
+    const details = { name, email, companyName: companyName ?? null, teamSize: teamSize ?? null };
+    await Promise.all([
+      notifySlack(interestRequestBlocks(details)),
+      notifyExperimentChannel(interestExperimentNotification(details)),
+    ]);
     return { success: true };
   } catch (err) {
     console.error("[interest] submission failed", err);

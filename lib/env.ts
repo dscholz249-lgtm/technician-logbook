@@ -23,6 +23,17 @@ export const env = {
   get SLACK_WEBHOOK_URL(): string | undefined {
     return process.env.SLACK_WEBHOOK_URL;
   },
+  // Second incoming webhook, bound to #experiment-notifications. Every
+  // notification also goes there in a fuller format (type, what to do, link)
+  // that @-mentions SLACK_MENTION_USER_ID. Optional; skipped if absent.
+  get SLACK_EXPERIMENT_WEBHOOK_URL(): string | undefined {
+    return process.env.SLACK_EXPERIMENT_WEBHOOK_URL?.trim() || undefined;
+  },
+  // Slack member ID to @-mention in #experiment-notifications (Dan's by
+  // default). An ID, not a name: `<@U…>` is the only mention webhooks honour.
+  get SLACK_MENTION_USER_ID(): string {
+    return process.env.SLACK_MENTION_USER_ID?.trim() || "U0B65LV46MA";
+  },
   // Comma-separated list of emails explicitly allowed to access the admin dashboard.
   get ADMIN_EMAILS(): string[] {
     const raw = process.env.ADMIN_EMAILS || "";

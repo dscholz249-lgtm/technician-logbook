@@ -2,7 +2,12 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { getManagerByEmail, getCompanies, createUrgentRequest } from "@/lib/supabase/db";
-import { notifySlack, urgentRequestBlocks } from "@/lib/slack";
+import {
+  notifySlack,
+  urgentRequestBlocks,
+  notifyExperimentChannel,
+  urgentExperimentNotification,
+} from "@/lib/slack";
 
 export async function submitUrgentRequest(
   message: string,
@@ -30,11 +35,19 @@ export async function submitUrgentRequest(
       message: message.trim(),
     });
 
-    await notifySlack(urgentRequestBlocks({
-      managerName: manager.name,
-      companyName: company.name,
-      message: message.trim(),
-    }));
+    await Promise.all([
+      notifySlack(urgentRequestBlocks({
+        managerName: manager.name,
+        companyName: company.name,
+        message: message.trim(),
+      })),
+      notifyExperimentChannel(urgentExperimentNotification({
+        managerName: manager.name,
+        managerEmail: user.email,
+        companyName: company.name,
+        message: message.trim(),
+      })),
+    ]);
 
     return {};
   } catch (err) {
