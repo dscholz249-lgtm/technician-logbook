@@ -133,6 +133,39 @@ export async function labsEventReporting(
   }
 }
 
+// How far a Console request's timestamp may sit from our clock. Same window
+// as Assessments; it bounds how long a captured request could be replayed.
+const REQUEST_TOLERANCE_SECONDS = 300;
+
+/**
+ * Verifies a request the Console sends us — its Update button (PRD-426). The
+ * Console signs with this product's shared secret, the same way we sign our
+ * events to it: `v1=` + HMAC-SHA256 over `${timestamp}.${rawBody}`. So no
+ * extra credential is needed, and a rotated secret works for both directions
+ * once deployed. Pass the raw body text, before anything parses it.
+ */
+export function labsRequestAuthorized(headers: Headers, rawBody: string): boolean {
+  const productId = process.env.LABS_CONSOLE_PRODUCT_ID;
+  const secret = process.env.LABS_CONSOLE_SECRET;
+  if (!productId || !secret) return false;
+  if (headers.get("x-labs-product") !== productId) return false;
+
+  const ts = headers.get("x-labs-timestamp") ?? "";
+  const tsNum = Number(ts);
+  if (
+    !/^\d+$/.test(ts) ||
+    Math.abs(Math.floor(Date.now() / 1000) - tsNum) > REQUEST_TOLERANCE_SECONDS
+  ) {
+    return false;
+  }
+
+  const expected = Buffer.from(
+    "v1=" + crypto.createHmac("sha256", secret).update(`${ts}.${rawBody}`).digest("hex"),
+  );
+  const provided = Buffer.from(headers.get("x-labs-signature") ?? "");
+  return expected.length === provided.length && crypto.timingSafeEqual(expected, provided);
+}
+
 /**
  * Fire without awaiting, for call sites inside a user-facing request. Keeps
  * the rule above literal: the caller does not wait, and a rejection cannot
