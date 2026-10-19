@@ -13,13 +13,13 @@
 // the response.
 
 import { NextResponse, type NextRequest } from "next/server";
-import { labsRequestAuthorized } from "@/lib/labs-console";
+import { labsCredentials, labsRequestAuthorized } from "@/lib/labs-console";
 import { sendLabsSnapshot, yesterdayUtc } from "@/lib/labs-snapshot";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
-  if (!process.env.LABS_CONSOLE_PRODUCT_ID || !process.env.LABS_CONSOLE_SECRET) {
+  if (!labsCredentials()) {
     return NextResponse.json({ ok: false, error: "labs console not configured" }, { status: 503 });
   }
   // Signed over the raw bytes, so read them before anything parses the body.

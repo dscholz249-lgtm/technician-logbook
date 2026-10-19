@@ -33,14 +33,26 @@ export type LabsEventType =
   // `events` table when the reader lands.
   | "metrics.activity.daily";
 
+/**
+ * The product id and shared secret, trimmed. Production's product id was
+ * pasted into Railway with a trailing newline: outbound events never noticed
+ * (fetch strips header whitespace), but comparing it against the id the
+ * Console sends us failed every time. Read them only through here.
+ */
+export function labsCredentials(): { productId: string; secret: string } | null {
+  const productId = process.env.LABS_CONSOLE_PRODUCT_ID?.trim();
+  const secret = process.env.LABS_CONSOLE_SECRET?.trim();
+  return productId && secret ? { productId, secret } : null;
+}
+
 export async function labsEvent(
   eventType: LabsEventType,
   data: unknown,
   opts?: { occurredAt?: string; eventId?: string },
 ): Promise<void> {
-  const productId = process.env.LABS_CONSOLE_PRODUCT_ID;
-  const secret = process.env.LABS_CONSOLE_SECRET;
-  if (!productId || !secret) return;
+  const creds = labsCredentials();
+  if (!creds) return;
+  const { productId, secret } = creds;
 
   const body = JSON.stringify({
     event_id: opts?.eventId ?? crypto.randomUUID(),
@@ -87,15 +99,15 @@ export async function labsEventReporting(
   data: unknown,
   opts?: { occurredAt?: string; eventId?: string },
 ): Promise<{ ok: boolean; status: number | null; body: string }> {
-  const productId = process.env.LABS_CONSOLE_PRODUCT_ID;
-  const secret = process.env.LABS_CONSOLE_SECRET;
-  if (!productId || !secret) {
+  const creds = labsCredentials();
+  if (!creds) {
     return {
       ok: false,
       status: null,
       body: "LABS_CONSOLE_PRODUCT_ID or LABS_CONSOLE_SECRET is not set on this deploy",
     };
   }
+  const { productId, secret } = creds;
 
   const body = JSON.stringify({
     event_id: opts?.eventId ?? crypto.randomUUID(),
@@ -145,9 +157,9 @@ const REQUEST_TOLERANCE_SECONDS = 300;
  * once deployed. Pass the raw body text, before anything parses it.
  */
 export function labsRequestAuthorized(headers: Headers, rawBody: string): boolean {
-  const productId = process.env.LABS_CONSOLE_PRODUCT_ID;
-  const secret = process.env.LABS_CONSOLE_SECRET;
-  if (!productId || !secret) return false;
+  const creds = labsCredentials();
+  if (!creds) return false;
+  const { productId, secret } = creds;
   if (headers.get("x-labs-product") !== productId) return false;
 
   const ts = headers.get("x-labs-timestamp") ?? "";
