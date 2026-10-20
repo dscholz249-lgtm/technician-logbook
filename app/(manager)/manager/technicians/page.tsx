@@ -7,6 +7,7 @@ import type { Alert } from "@/lib/api";
 import { TechLog } from "../tech-log";
 import { TechInviteButton, InviteAllTechsButton } from "@/components/tech-invite-button";
 import { DirectorAddManager } from "../director-add-manager";
+import { TechnicianRowActions } from "./technician-row-actions";
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "@/components/ui/table";
 import { cookies } from "next/headers";
 import { env, isAdmin } from "@/lib/env";
@@ -101,6 +102,7 @@ function TechnicianTable({ technicians, companyId }: { technicians: Technician[]
                 <TableHead>Technician</TableHead>
                 <TableHead>Title</TableHead>
                 <TableHead>Email</TableHead>
+                <TableHead>Phone</TableHead>
                 <TableHead />
               </TableRow>
             </TableHeader>
@@ -114,8 +116,10 @@ function TechnicianTable({ technicians, companyId }: { technicians: Technician[]
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">{t.title ?? "—"}</TableCell>
                   <TableCell className="text-xs text-muted-foreground">{t.email ?? "—"}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground whitespace-nowrap">{t.phone ?? "—"}</TableCell>
                   <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-2">
+                    <div className="flex items-center justify-end gap-3">
+                      <TechnicianRowActions technician={t} />
                       {t.email && <TechInviteButton technicianId={t.id} technicianName={t.name} />}
                       <Link
                         href={`/manager/technician/${t.id}`}

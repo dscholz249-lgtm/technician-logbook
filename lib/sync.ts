@@ -38,7 +38,13 @@ export async function syncCompanyToExpress(
       "Content-Type": "application/json",
       "Authorization": `Bearer ${env.EXPRESS_API_SECRET}`,
     },
-    body: JSON.stringify({ employees }),
+    // company_ids tells the SMS service this is the company's full roster, so
+    // it drops anyone no longer on it (removed, or re-created under a new id).
+    // Withheld for an empty roster: several callers fall back to `?? []` when
+    // the company lookup misses, and that must not wipe the company.
+    body: JSON.stringify(
+      employees.length > 0 ? { employees, company_ids: [companyId] } : { employees },
+    ),
     cache: "no-store",
   });
 }

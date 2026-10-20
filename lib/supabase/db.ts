@@ -340,19 +340,101 @@ export async function resolveUrgentRequest(id: string): Promise<void> {
   if (error) throw error;
 }
 
+export async function getTechnicianById(id: string): Promise<Technician | null> {
+  const db = createAdminClient();
+  const { data, error } = await db.from("technicians").select("*").eq("id", id).maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
 export async function updateTechnician(
   id: string,
   row: { name?: string; email?: string | null; title?: string | null; phone?: string | null; company_id?: string },
 ): Promise<void> {
   const db = createAdminClient();
-  const { error } = await db.from("technicians").update(row).eq("id", id);
+  const before = await getTechnicianById(id);
+  const { data: after, error } = await db
+    .from("technicians")
+    .update(row)
+    .eq("id", id)
+    .select()
+    .maybeSingle();
   if (error) throw error;
+  if (!after) return;
+
+  // The Console id is derived from email/phone/name (technicianExternalId), so
+  // an edit to those — or a company move — reads as a different person: retire
+  // the old id, then register the new one (a re-send for an unchanged id is an
+  // update, so this is safe on every edit).
+  const afterId = technicianExternalId(after.company_id, after);
+  if (before) {
+    const beforeId = technicianExternalId(before.company_id, before);
+    if (beforeId !== afterId) {
+      labsEventDetached("user.removed", { external_user_id: beforeId, reason: "deleted" });
+    }
+  }
+  labsEventDetached("user.registered", {
+    external_user_id: afterId,
+    email: after.email,
+    phone: after.phone,
+    name: after.name,
+    role: "technician",
+  });
 }
 
 export async function deleteTechnician(id: string): Promise<void> {
   const db = createAdminClient();
+  const before = await getTechnicianById(id);
   const { error } = await db.from("technicians").delete().eq("id", id);
   if (error) throw error;
+  if (before) {
+    labsEventDetached("user.removed", {
+      external_user_id: technicianExternalId(before.company_id, before),
+      reason: "deleted",
+    });
+  }
+}
+
+/**
+ * Who else already uses this email or phone. Email is the sign-in key (the
+ * magic-link lookup checks managers then technicians) and phone is how the SMS
+ * service recognises an inbound text, so either one shared between two people
+ * would route a login or a message to the wrong person. Phones compare on
+ * digits only, since stored formats vary.
+ */
+export async function findContactConflict(
+  contact: { email: string | null; phone: string | null },
+  excludeTechnicianId: string,
+): Promise<"email" | "phone" | null> {
+  const db = createAdminClient();
+  if (contact.email) {
+    const email = contact.email.toLowerCase();
+    const [{ data: techs }, { data: mgrs }] = await Promise.all([
+      // Emails are stored lowercased by every write path; eq, not ilike, so an
+      // "_" in an address isn't read as a wildcard.
+      db.from("technicians").select("id").eq("email", email).neq("id", excludeTechnicianId).limit(1),
+      db.from("managers").select("id").eq("email", email).is("deleted_at", null).limit(1),
+    ]);
+    if ((techs?.length ?? 0) > 0 || (mgrs?.length ?? 0) > 0) return "email";
+  }
+  const digits = phoneDigits(contact.phone);
+  if (digits) {
+    const [{ data: techs }, { data: mgrs }] = await Promise.all([
+      db.from("technicians").select("id, phone").not("phone", "is", null).neq("id", excludeTechnicianId),
+      db.from("managers").select("id, phone").not("phone", "is", null).is("deleted_at", null),
+    ]);
+    const clash = [...(techs ?? []), ...(mgrs ?? [])].some(r => phoneDigits(r.phone) === digits);
+    if (clash) return "phone";
+  }
+  return null;
+}
+
+// Last 10 digits, so "+1 (555) 000-0000" and "5550000000" compare equal —
+// the same normalisation the SMS service applies (US numbers only).
+function phoneDigits(phone: string | null | undefined): string | null {
+  const d = phone?.replace(/\D/g, "") ?? "";
+  if (!d) return null;
+  return d.length === 11 && d.startsWith("1") ? d.slice(1) : d;
 }
 
 export async function addTechnician(
