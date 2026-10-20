@@ -5,6 +5,8 @@ import { getManagerByEmail, getCompanies } from "@/lib/supabase/db";
 import { getQueue, getLogbook, getTechnicianMedia } from "@/lib/api";
 import { ChevronLeftIcon, MessageSquareIcon } from "lucide-react";
 import type { QueueItem, LogbookEntry } from "@/lib/types";
+import { canDeleteLog } from "@/lib/log-permissions";
+import { DeleteLogButton } from "../../delete-log-button";
 
 export const dynamic = "force-dynamic";
 
@@ -229,6 +231,9 @@ export default async function TechnicianPage({
                       {entry.kind === "assignment" ? "Assignment" : "Note"}
                     </span>
                     <MessageSquareIcon className="size-3 text-muted-foreground/50" />
+                    {entry.kind === "note" && canDeleteLog(manager, entry.data) && (
+                      <DeleteLogButton entryId={entry.data.id} companyId={entry.data.company_id} className="ml-1" />
+                    )}
                   </div>
                 </div>
               );

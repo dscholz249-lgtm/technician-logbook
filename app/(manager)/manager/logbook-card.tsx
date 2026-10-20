@@ -1,5 +1,6 @@
 import { ImageIcon } from "lucide-react";
 import type { LogbookEntry } from "@/lib/types";
+import { DeleteLogButton } from "./delete-log-button";
 
 function parseBody(raw: string): { text: string; mediaUrls: string[] } {
   try {
@@ -59,7 +60,11 @@ export function LogbookCard({ entry }: { entry: LogbookEntry }) {
         {text && (
           <p className="text-sm text-foreground leading-relaxed line-clamp-4">{text}</p>
         )}
-        <p className="text-xs text-muted-foreground mt-auto">{formatTimestamp(entry.created_at)}</p>
+        <div className="flex items-center justify-between gap-2 mt-auto">
+          <p className="text-xs text-muted-foreground">{formatTimestamp(entry.created_at)}</p>
+          {/* The grid only ever holds the manager's own entries, which they may delete. */}
+          <DeleteLogButton entryId={entry.id} companyId={entry.company_id} />
+        </div>
       </div>
     </div>
   );

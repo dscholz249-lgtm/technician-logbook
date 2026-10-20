@@ -8,6 +8,7 @@ import { TechLog } from "../tech-log";
 import { TechInviteButton, InviteAllTechsButton } from "@/components/tech-invite-button";
 import { DirectorAddManager } from "../director-add-manager";
 import { TechnicianRowActions } from "./technician-row-actions";
+import { canDeleteLog } from "@/lib/log-permissions";
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from "@/components/ui/table";
 import { cookies } from "next/headers";
 import { env, isAdmin } from "@/lib/env";
@@ -19,13 +20,17 @@ export const dynamic = "force-dynamic";
 
 export type LogItem =
   | { kind: "assignment"; data: QueueItem; techName: string }
-  | { kind: "note"; data: LogbookEntry; techName: string };
+  | { kind: "note"; data: LogbookEntry; techName: string; canDelete: boolean };
 
 function parsePayload(raw: string): Record<string, unknown> {
   try { return JSON.parse(raw); } catch { return {}; }
 }
 
-function buildTechGroups(queue: QueueItem[], logbook: LogbookEntry[]) {
+function buildTechGroups(
+  queue: QueueItem[],
+  logbook: LogbookEntry[],
+  canDelete: (e: LogbookEntry) => boolean,
+) {
   const groups = new Map<string, LogItem[]>();
 
   function add(name: string, item: LogItem) {
@@ -47,7 +52,7 @@ function buildTechGroups(queue: QueueItem[], logbook: LogbookEntry[]) {
   for (const e of logbook) {
     if (!e.employee_name_raw) continue; // skip manager self-entries
     const name = e.employee_name_raw;
-    add(name, { kind: "note", data: e, techName: name });
+    add(name, { kind: "note", data: e, techName: name, canDelete: canDelete(e) });
   }
 
   return Array.from(groups.entries())
@@ -169,7 +174,7 @@ export default async function TechniciansPage() {
     getAlerts(manager.company_id).catch(() => [] as Alert[]),
   ]);
 
-  const techGroups = buildTechGroups(queue, logbook);
+  const techGroups = buildTechGroups(queue, logbook, e => canDeleteLog(manager, e));
   const technicians = company?.technicians ?? [];
 
   return (

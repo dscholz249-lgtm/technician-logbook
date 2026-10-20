@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ChevronDownIcon, ChevronRightIcon, MessageSquareIcon } from "lucide-react";
 import type { LogItem } from "./technicians/page";
+import { DeleteLogButton } from "./delete-log-button";
 
 function Initials({ name }: { name: string }) {
   const parts = name.trim().split(/\s+/);
@@ -131,6 +132,9 @@ function TechRow({ group }: { group: TechGroup }) {
                     {item.kind === "assignment" ? "Assignment" : "Note"}
                   </span>
                   <MessageSquareIcon className="size-3 text-muted-foreground/50" />
+                  {item.kind === "note" && item.canDelete && (
+                    <DeleteLogButton entryId={item.data.id} companyId={item.data.company_id} className="ml-1" />
+                  )}
                 </div>
               </div>
             );

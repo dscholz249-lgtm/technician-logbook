@@ -65,6 +65,19 @@ export async function getLogbook(companyId?: string, managerPhone?: string, tech
   return apiFetch<LogbookEntry[]>(`/api/logbook${qs}`);
 }
 
+/** Soft-delete a logbook entry (PRD-434). The SMS service enforces the scope
+ *  it's given: company always, and manager_phone limits it to that manager's
+ *  own entries. Throws ApiError 404 when nothing in scope matched. */
+export async function deleteLogbookEntry(
+  id: number,
+  scope: { company_id: string; manager_phone?: string | null; deleted_by: string },
+): Promise<void> {
+  await apiFetch<{ ok: true }>(`/api/logbook/${id}/delete`, {
+    method: "POST",
+    body: JSON.stringify(scope),
+  });
+}
+
 export async function getManagerOwnLogbook(companyId: string, managerPhone: string): Promise<LogbookEntry[]> {
   const params = new URLSearchParams({ company_id: companyId, manager_phone: managerPhone, self: "1" });
   return apiFetch<LogbookEntry[]>(`/api/logbook?${params}`);
