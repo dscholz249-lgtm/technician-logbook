@@ -178,6 +178,21 @@ export async function getManagerByEmail(email: string): Promise<Manager | null> 
   return data;
 }
 
+/** The active manager/director texting from this phone (digits compared, since
+ *  stored formats vary), or null. Used by the SMS add-technician flow. */
+export async function getManagerByPhone(phone: string): Promise<Manager | null> {
+  const digits = phoneDigits(phone);
+  if (!digits) return null;
+  const db = createAdminClient();
+  const { data, error } = await db
+    .from("managers")
+    .select("*")
+    .not("phone", "is", null)
+    .is("deleted_at", null);
+  if (error) throw error;
+  return (data ?? []).find(m => phoneDigits(m.phone) === digits) ?? null;
+}
+
 export async function updateManagerPhone(
   managerId: string,
   phone: string,
@@ -404,26 +419,29 @@ export async function deleteTechnician(id: string): Promise<void> {
  */
 export async function findContactConflict(
   contact: { email: string | null; phone: string | null },
-  excludeTechnicianId: string,
+  excludeTechnicianId?: string,
 ): Promise<"email" | "phone" | null> {
   const db = createAdminClient();
+  // No exclusion for a brand-new technician (neq on "" would be a bad uuid).
+  const isOther = (id: string) => id !== excludeTechnicianId;
   if (contact.email) {
     const email = contact.email.toLowerCase();
     const [{ data: techs }, { data: mgrs }] = await Promise.all([
       // Emails are stored lowercased by every write path; eq, not ilike, so an
       // "_" in an address isn't read as a wildcard.
-      db.from("technicians").select("id").eq("email", email).neq("id", excludeTechnicianId).limit(1),
+      db.from("technicians").select("id").eq("email", email),
       db.from("managers").select("id").eq("email", email).is("deleted_at", null).limit(1),
     ]);
-    if ((techs?.length ?? 0) > 0 || (mgrs?.length ?? 0) > 0) return "email";
+    if ((techs ?? []).some(t => isOther(t.id)) || (mgrs?.length ?? 0) > 0) return "email";
   }
   const digits = phoneDigits(contact.phone);
   if (digits) {
     const [{ data: techs }, { data: mgrs }] = await Promise.all([
-      db.from("technicians").select("id, phone").not("phone", "is", null).neq("id", excludeTechnicianId),
+      db.from("technicians").select("id, phone").not("phone", "is", null),
       db.from("managers").select("id, phone").not("phone", "is", null).is("deleted_at", null),
     ]);
-    const clash = [...(techs ?? []), ...(mgrs ?? [])].some(r => phoneDigits(r.phone) === digits);
+    const clash = [...(techs ?? []).filter(t => isOther(t.id)), ...(mgrs ?? [])]
+      .some(r => phoneDigits(r.phone) === digits);
     if (clash) return "phone";
   }
   return null;
@@ -448,6 +466,13 @@ export async function addTechnician(
     .select()
     .single();
   if (error) throw error;
+  labsEventDetached("user.registered", {
+    external_user_id: technicianExternalId(companyId, data),
+    email: data.email,
+    phone: data.phone,
+    name: data.name,
+    role: "technician",
+  });
   return data;
 }
 

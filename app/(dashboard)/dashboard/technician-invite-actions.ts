@@ -7,8 +7,7 @@ import { getCompanies, getManagerByEmail } from "@/lib/supabase/db";
 import { env, isAdmin } from "@/lib/env";
 import { buildTechInviteEmail } from "@/lib/email/tech-invite";
 import { capture } from "@/lib/analytics";
-
-const SKILLCAT_SMS_NUMBER = (process.env.SKILLCAT_SMS_PHONE ?? "(251) 313-5407").replace(/^["']|["']$/g, "");
+import { deliverTechInvite, SKILLCAT_SMS_NUMBER } from "@/lib/email/send-tech-invite";
 
 async function getCallerInfo(): Promise<{ email: string; name: string; isAdmin: boolean }> {
   const supabase = await createClient();
@@ -84,44 +83,13 @@ export async function sendTechnicianInvite(
     if (manager?.company_id !== company.id) return { error: "Not authorized to invite technicians at this company." };
   }
 
-  const adminClient = createAdminClient();
-  const { data: linkData, error: linkError } = await adminClient.auth.admin.generateLink({
-    type: "magiclink",
-    email: technician.email,
-    options: { redirectTo: `${env.PUBLIC_ORIGIN}/auth/confirm` },
-  });
-
-  if (linkError || !linkData?.properties?.action_link) {
-    return { error: linkError?.message ?? "Failed to generate login link." };
-  }
-
-  const firstName = technician.name.split(/\s+/)[0];
-  const html = buildTechInviteEmail({
-    firstName,
+  return deliverTechInvite({
+    technician,
+    companyId: company.id,
     companyName: company.name,
     managerName: caller.name,
-    loginLink: linkData.properties.action_link,
-    preferencesLink: `${env.PUBLIC_ORIGIN}/tech`,
-    smsNumber: SKILLCAT_SMS_NUMBER,
+    sentBy: caller.email,
   });
-
-  const resend = new Resend(resendKey);
-  const { error: sendError } = await resend.emails.send({
-    from: "SkillCat Labs <logbook@tryskillcat.com>",
-    to: technician.email,
-    subject: `${company.name} has added you to SkillCat Labs`,
-    html,
-  });
-
-  if (sendError) return { error: sendError.message };
-
-  await capture(technician.email, "tech_invite_sent", {
-    company_id: company.id,
-    company_name: company.name,
-    sent_by: caller.email,
-  });
-
-  return { sent: true };
 }
 
 export async function sendAllTechnicianInvites(
